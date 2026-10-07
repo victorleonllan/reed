@@ -51,7 +51,7 @@ referencia, nunca se modifica).
 | Spec | Capa | Qué hace | Estado |
 |---|---|---|---|
 | R-001 | LÓGICA | Dependencias de toda la v2, `.env.example` y `src/config.ts` (planes, precios) | aplicado (07-oct-2026) |
-| R-002 | FRONTEND | `ReedModePanel` partido en un componente por modo (refactor) | diseño |
+| R-002 | FRONTEND | `ReedModePanel` partido en un componente por modo (refactor) | aplicado (07-oct-2026) |
 | R-003 | FRONTEND | Sistema visual: tokens, tipografía, `Button`, `Surface`, `IconButton` | diseño |
 | R-004 | FRONTEND | Personajes sin fondo ni marco: WebP, `ReedCharacter` | diseño |
 | R-005 | LÓGICA | Landing en `/`, app en `/app`, layout de Next con las fuentes de Reed | diseño |

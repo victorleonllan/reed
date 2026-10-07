@@ -1,6 +1,6 @@
 # Spec R-002 — Partir `ReedModePanel` en un componente por modo
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `tsc --noEmit` raíz y `-p frontend` verdes, `npm run lint` verde; contenedor en 106 líneas.
 > Capa: FRONTEND. `frontend/src/components/reed/ReedModePanel.tsx`,
 > `frontend/src/components/reed/modes/SleepingMode.tsx` (nuevo),
 > `frontend/src/components/reed/modes/CompanionMode.tsx` (nuevo),
