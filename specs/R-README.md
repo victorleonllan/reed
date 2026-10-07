@@ -64,7 +64,7 @@ referencia, nunca se modifica).
 | R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | diseño |
 | R-013 | FRONTEND | Encabezado, navegación móvil, transición entre vistas, avisos | aplicado (07-oct-2026) |
 | R-014 | FRONTEND | Pantalla de acceso con los personajes | aplicado (07-oct-2026) |
-| R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | diseño |
+| R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | aplicado (07-oct-2026) |
 | R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | aplicado (07-oct-2026) |
 | R-017 | FRONTEND | Términos, privacidad, SEO (sitemap, robots, OG) y páginas de error | diseño |
 | R-018 | FRONTEND | Blog estático con tres artículos | diseño |

@@ -21,7 +21,7 @@ export class ApiError extends Error {
   }
 }
 
-async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   const token = getToken ? await getToken() : null;
   if (token) headers.set('Authorization', `Bearer ${token}`);
