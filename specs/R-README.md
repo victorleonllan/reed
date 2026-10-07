@@ -54,7 +54,7 @@ referencia, nunca se modifica).
 | R-002 | FRONTEND | `ReedModePanel` partido en un componente por modo (refactor) | aplicado (07-oct-2026) |
 | R-003 | FRONTEND | Sistema visual: tokens, tipografía, `Button`, `Surface`, `IconButton` | aplicado (07-oct) |
 | R-004 | FRONTEND | Personajes sin fondo ni marco: WebP, `ReedCharacter` | diseño |
-| R-005 | LÓGICA | Landing en `/`, app en `/app`, layout de Next con las fuentes de Reed | diseño |
+| R-005 | LÓGICA | Landing en `/`, app en `/app`, layout de Next con las fuentes de Reed | aplicado |
 | R-006 | LÓGICA | Plan en la metadata de Clerk y límites de uso por plan | diseño |
 | R-007 | FRONTEND | Biblioteca y almacén: portadas generadas, «sigue leyendo», subida | diseño |
 | R-008 | FRONTEND | Transición animada entre modos (el junco que se dobla) y personajes vivos | diseño |

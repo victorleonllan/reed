@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Same color tokens as frontend/src/index.css, so the landing and the app read as one product.
+   Fonts: --font-serif and --font-sans come from next/font in layout.tsx. */
+@theme {
+  --color-paper: #f3ecdf;
+  --color-paper-raised: #e3f0e6;
+  --color-paper-sunk: #d0e3d6;
+  --color-ink: #1f2a22;
+  --color-ink-muted: #586257;
+  --color-line: #9db8a4;
+  --color-line-strong: #2f5d46;
+  --color-reed: #2f5d46;
+  --color-reed-strong: #244a38;
+  --color-on-reed: #fbf8f0;
+  --color-reed-soft: #cfe0d4;
+  --color-clay: #f6ddb8;
+  --color-clay-strong: #c4843a;
+  --color-on-clay: #1f2a22;
+  --color-ambar: #d9893b;
+  --color-on-ambar: #1f2a22;
+  --color-ambar-ink: #8c4712;
+  --color-highlight: #f4e2a8;
+  --color-focus: #a44f10;
+  --color-danger: #a3392b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-paper: #101613;
+    --color-paper-raised: #24382d;
+    --color-paper-sunk: #1a2c23;
+    --color-ink: #ece6d8;
+    --color-ink-muted: #a9ad9f;
+    --color-line: #3e6250;
+    --color-line-strong: #9dceae;
+    --color-reed: #8fc2a0;
+    --color-reed-strong: #a9d4b6;
+    --color-on-reed: #12201a;
+    --color-reed-soft: #2c4234;
+    --color-clay: #e7c48a;
+    --color-clay-strong: #f3deba;
+    --color-on-clay: #1f2a22;
+    --color-ambar: #e3a35e;
+    --color-on-ambar: #161b17;
+    --color-ambar-ink: #eeb57c;
+    --color-highlight: #4d4322;
+    --color-focus: #eba766;
+    --color-danger: #e8877a;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }

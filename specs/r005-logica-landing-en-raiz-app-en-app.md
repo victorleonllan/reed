@@ -1,6 +1,6 @@
 # Spec R-005 — La landing vive en `/` y la app en `/app`
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — tsc raíz + tsc frontend + lint en verde; V1 (build + start) pendiente.
 > Capa: LOGICA. `next.config.ts`, `src/app/layout.tsx`, `src/app/globals.css`,
 > `src/app/(marketing)/page.tsx` (nuevo, provisional),
 > `frontend/src/components/auth/ClerkAuthProvider.tsx`.

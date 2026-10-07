@@ -16,9 +16,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   async rewrites() {
-    // The frontend (Vite app in frontend/) is built into public/app/ and served at the site root.
-    // It has no client-side routes, so only "/" maps to its index.html; /api/* stays with Next.
-    return { beforeFiles: [{ source: "/", destination: "/app/index.html" }] };
+    // The frontend (Vite app in frontend/) is built into public/app/ (base "/app/") and served at /app.
+    // It has no client-side routes, so only "/app" maps to its index.html; the landing page and
+    // /api/* stay with Next.
+    return { beforeFiles: [{ source: "/app", destination: "/app/index.html" }] };
   },
 };
 
