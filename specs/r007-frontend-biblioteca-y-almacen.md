@@ -1,6 +1,6 @@
 # Spec R-007 — Biblioteca y almacén: portadas, estados vacíos y subida
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; sin tocar `App.tsx` ni `AccountContext.tsx`. Falta verlo en ejecución (sin servidor en la tanda).
 > Capa: FRONTEND. `frontend/src/components/library/LibraryView.tsx`,
 > `frontend/src/components/library/BookCard.tsx`,
 > `frontend/src/components/library/UploadBookModal.tsx`,
