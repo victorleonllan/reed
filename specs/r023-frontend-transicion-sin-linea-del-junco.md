@@ -1,6 +1,6 @@
 # Spec R-023 — La transición entre modos sin la línea del junco
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — tsc (raíz y frontend) y lint verdes; la línea ya no está en `ReedCharacter` ni en `ModesShowcase` (los `w-[2px]` que quedan son la marca de «Bienvenida» y las barras de voz). Revisión visual pendiente (V6).
 > Capa: FRONTEND. `frontend/src/components/reed/ReedCharacter.tsx`,
 > `src/components/marketing/ModesShowcase.tsx`.
 > Modifica: R-008 (paso 2 de la transición) y su réplica en R-012. R-008 sigue vigente en todo lo

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   AnimatePresence,
   animate,
@@ -11,7 +11,6 @@ import {
 } from 'motion/react';
 import { ReedMode } from '../../types';
 import { modeLabels, modePortraits } from './portraits';
-import { modeAccent } from './modeTheme';
 
 type ReedCharacterSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -19,7 +18,7 @@ interface ReedCharacterProps {
   mode: ReedMode;
   size?: ReedCharacterSize;
   className?: string;
-  // Breathing, sleeping "z", hover tilt and the reed transition between modes.
+  // Breathing, sleeping "z", hover tilt and the bend transition between modes.
   // Off by default so the small menu icons stay still.
   animated?: boolean;
 }
@@ -45,10 +44,8 @@ const shadowClasses =
 const imgClasses =
   'relative h-full w-auto object-contain [filter:drop-shadow(0_2px_3px_rgba(64,46,24,0.18))] dark:[filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.45))]';
 
-// Timeline of a mode change: exit 180 ms, reed line 120-280 ms, entry from 240 ms.
+// Timeline of a mode change: exit 180 ms, then the entry.
 const EXIT_S = 0.18;
-const REED_LINE_DELAY_S = 0.12;
-const REED_LINE_S = 0.16;
 const ENTER_DELAY_S = 0.06;
 const MAX_TILT_DEG = 3;
 const FOCUS_TILT_DEG = 2;
@@ -96,14 +93,6 @@ const AnimatedCharacter: React.FC<Omit<ReedCharacterProps, 'animated'>> = ({ mod
   const rootRef = useRef<HTMLSpanElement>(null);
   const hovering = useRef(false);
   const focused = useRef(false);
-
-  // Count mode changes during render so the reed line only plays on a real change, not on mount.
-  const [prevMode, setPrevMode] = useState(mode);
-  const [bendCount, setBendCount] = useState(0);
-  if (mode !== prevMode) {
-    setPrevMode(mode);
-    setBendCount((count) => count + 1);
-  }
 
   // One breathing value drives both the character and its contact shadow, so they stay in phase.
   const breath = useMotionValue(0);
@@ -171,19 +160,6 @@ const AnimatedCharacter: React.FC<Omit<ReedCharacterProps, 'animated'>> = ({ mod
         className={shadowClasses}
         style={{ x: '-50%', y: '33%', scaleX: shadowScaleX, opacity: shadowOpacity }}
       />
-
-      {/* The reed: a thin line in the new mode's color grows from the shadow and fades out. */}
-      {!reduceMotion && bendCount > 0 && (
-        <motion.span
-          key={bendCount}
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-[2%] left-1/2 h-[85%] w-[2px] rounded-pill"
-          style={{ backgroundColor: modeAccent[mode].color, x: '-50%', originY: 1 }}
-          initial={{ scaleY: 0, opacity: 0 }}
-          animate={{ scaleY: [0, 1, 1], opacity: [0, 1, 0] }}
-          transition={{ delay: REED_LINE_DELAY_S, duration: REED_LINE_S, times: [0, 0.6, 1], ease: 'easeOut' }}
-        />
-      )}
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

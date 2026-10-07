@@ -74,7 +74,7 @@ const IMAGE_HEIGHT = 640;
 const INITIAL_INDEX = 1;
 
 // The reed that bends (R-008): the old character leans out from its feet, the new one
-// straightens up with a small spring. Exit 180 ms, reed line 120-280 ms, entry from 60 ms.
+// straightens up with a small spring. Exit 180 ms, entry from 60 ms.
 const bendVariants: Variants = {
   initial: { opacity: 0, rotate: 8, scale: 0.92 },
   enter: {
@@ -126,8 +126,6 @@ function Chevron({ direction }: { direction: "left" | "right" }) {
 export function ModesShowcase() {
   const reduceMotion = useReducedMotion() ?? false;
   const [selected, setSelected] = useState(INITIAL_INDEX);
-  // Counts real changes so the reed line plays on a change, not on first paint.
-  const [changes, setChanges] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const mode = modes[selected];
 
@@ -135,7 +133,6 @@ export function ModesShowcase() {
     const next = (index + modes.length) % modes.length;
     if (next !== selected) {
       setSelected(next);
-      setChanges((count) => count + 1);
     }
     const tab = tabRefs.current[next];
     if (!tab) return;
@@ -192,17 +189,6 @@ export function ModesShowcase() {
                 aria-hidden="true"
                 className="absolute bottom-0 left-1/2 h-[7%] w-[70%] -translate-x-1/2 translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(64,46,24,0.28),transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(236,230,216,0.18),transparent_70%)]"
               />
-              {!reduceMotion && changes > 0 && (
-                <motion.span
-                  key={changes}
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-[2%] left-1/2 h-[85%] w-[2px] rounded-full"
-                  style={{ backgroundColor: mode.accent, x: "-50%", originY: 1 }}
-                  initial={{ scaleY: 0, opacity: 0 }}
-                  animate={{ scaleY: [0, 1, 1], opacity: [0, 1, 0] }}
-                  transition={{ delay: 0.12, duration: 0.16, times: [0, 0.6, 1], ease: "easeOut" }}
-                />
-              )}
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={mode.id}
