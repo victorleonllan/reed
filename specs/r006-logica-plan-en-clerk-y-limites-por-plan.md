@@ -1,6 +1,6 @@
 # Spec R-006 — El plan del usuario vive en Clerk y los límites dependen del plan
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — tsc (raíz y frontend) y lint verdes; consumeUsage sin cambios en las 8 rutas. Pendiente V# en ejecución con claves de Clerk.
 > Capa: LOGICA. `src/lib/plan.ts` (nuevo), `src/lib/usage.ts`, `src/app/api/usage/route.ts`.
 > Depende de: R-001 (`config.plans`).
 

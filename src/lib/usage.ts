@@ -1,6 +1,8 @@
 import { and, eq, gt, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { UsageKind } from "@/db/schema";
+import { config } from "@/config";
+import { getPlan, isPro, type PlanId } from "./plan";
 
 const { usageEvents } = schema;
 const WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -12,31 +14,38 @@ function limit(envName: string, fallback: number) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-export function usageLimits(): Record<UsageKind, { perUser: number; global: number }> {
+// Per-user limits come from config.plans[plan]; the LIMIT_*_PER_USER env vars still override the
+// free plan only (compatibility with the current deploy). Global caps are the same for everyone.
+export function usageLimits(plan: PlanId): Record<UsageKind, { perUser: number; global: number }> {
+  const p = config.plans[plan].limits;
+  const perUser = (envName: string, fallback: number) => (plan === "free" ? limit(envName, fallback) : fallback);
   return {
-    tts_chars: { perUser: limit("LIMIT_TTS_CHARS_PER_USER", 5_000), global: limit("LIMIT_TTS_CHARS_GLOBAL", 20_000) },
-    upload: { perUser: limit("LIMIT_UPLOADS_PER_USER", 10), global: limit("LIMIT_UPLOADS_GLOBAL", 100) },
-    agent_session: { perUser: limit("LIMIT_SESSIONS_PER_USER", 30), global: limit("LIMIT_SESSIONS_GLOBAL", 300) },
-    ai_request: { perUser: limit("LIMIT_AI_PER_USER", 100), global: limit("LIMIT_AI_GLOBAL", 1000) },
+    tts_chars: { perUser: perUser("LIMIT_TTS_CHARS_PER_USER", p.tts_chars), global: limit("LIMIT_TTS_CHARS_GLOBAL", 20_000) },
+    upload: { perUser: perUser("LIMIT_UPLOADS_PER_USER", p.upload), global: limit("LIMIT_UPLOADS_GLOBAL", 100) },
+    agent_session: { perUser: perUser("LIMIT_SESSIONS_PER_USER", p.agent_session), global: limit("LIMIT_SESSIONS_GLOBAL", 300) },
+    ai_request: { perUser: perUser("LIMIT_AI_PER_USER", p.ai_request), global: limit("LIMIT_AI_GLOBAL", 1000) },
   };
 }
 
 const LABELS: Record<UsageKind, string> = {
-  tts_chars: "read-aloud characters",
-  upload: "uploads",
-  agent_session: "voice sessions",
-  ai_request: "Reed answers",
+  tts_chars: "lectura en voz alta",
+  upload: "subidas",
+  agent_session: "conversaciones por voz",
+  ai_request: "respuestas de Reed",
 };
 
 export class UsageLimitError extends Error {
   constructor(
     readonly kind: UsageKind,
     readonly scope: "user" | "global",
+    readonly plan: PlanId,
   ) {
     super(
-      scope === "user"
-        ? `Daily limit reached for ${LABELS[kind]}. Try again later.`
-        : `The app's daily budget for ${LABELS[kind]} is used up. Try again later.`,
+      scope === "global"
+        ? `Por hoy se agotó el presupuesto de ${LABELS[kind]} de Reed. Vuelve mañana y seguimos.`
+        : plan === "free"
+          ? `Llegaste al límite diario de ${LABELS[kind]} del plan gratis. Con Reed Pro tienes más.`
+          : `Llegaste al límite diario de ${LABELS[kind]}. Vuelve mañana y seguimos.`,
     );
   }
 }
@@ -56,18 +65,28 @@ async function usedSince(kind: UsageKind, since: Date, userId?: string) {
  */
 export async function consumeUsage(userId: string, kind: UsageKind, amount = 1) {
   const since = new Date(Date.now() - WINDOW_MS);
-  const limits = usageLimits()[kind];
-  const [user, global] = await Promise.all([usedSince(kind, since, userId), usedSince(kind, since)]);
-  if (user + amount > limits.perUser) throw new UsageLimitError(kind, "user");
-  if (global + amount > limits.global) throw new UsageLimitError(kind, "global");
+  const info = await getPlan(userId);
+  const pro = isPro(info);
+  const plan: PlanId = pro ? "pro" : "free";
+  const limits = usageLimits(plan)[kind];
+  // Pro users skip the global cap: it protects the shared ElevenLabs quota from free usage, and
+  // paying users fund their own.
+  const [user, global] = await Promise.all([usedSince(kind, since, userId), pro ? 0 : usedSince(kind, since)]);
+  if (user + amount > limits.perUser) throw new UsageLimitError(kind, "user", plan);
+  if (!pro && global + amount > limits.global) throw new UsageLimitError(kind, "global", plan);
   await getDb().insert(usageEvents).values({ userId, kind, amount });
 }
 
-/** Usage in the last 24h vs. limits, for GET /api/usage. */
+/** Usage in the last 24h vs. limits plus the user's plan, for GET /api/usage. */
 export async function usageSummary(userId: string) {
   const since = new Date(Date.now() - WINDOW_MS);
-  const limits = usageLimits();
+  const info = await getPlan(userId);
+  const plan: PlanId = isPro(info) ? "pro" : "free";
+  const limits = usageLimits(plan);
   const kinds = Object.keys(limits) as UsageKind[];
   const used = await Promise.all(kinds.map((kind) => usedSince(kind, since, userId)));
-  return Object.fromEntries(kinds.map((kind, i) => [kind, { used: used[i], limit: limits[kind].perUser }]));
+  return {
+    plan: info,
+    usage: Object.fromEntries(kinds.map((kind, i) => [kind, { used: used[i], limit: limits[kind].perUser }])),
+  };
 }
