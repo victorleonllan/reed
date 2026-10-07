@@ -29,7 +29,10 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const res = await fetch(`${BACKEND_URL}${path}`, { ...init, headers });
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new ApiError(res.status, data?.error || `Error ${res.status}`);
+    const message = data?.error || `Error ${res.status}`;
+    // Daily limit reached: UpgradeModal (mounted in App) listens and offers Reed Pro calmly.
+    if (res.status === 429) window.dispatchEvent(new CustomEvent('reed:limit', { detail: { message } }));
+    throw new ApiError(res.status, message);
   }
   return res;
 }

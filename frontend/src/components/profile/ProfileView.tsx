@@ -3,6 +3,7 @@ import { useAccount } from '../../context/AccountContext';
 import { UserAvatar } from '../auth/UserAvatar';
 import { BADGES, badgeStats } from '../../lib/badges';
 import { Button } from '../ui/Button';
+import { PlanCard } from '../billing/PlanCard';
 
 export const ProfileView: React.FC = () => {
   const { user, entries, activity, logout, setAvatar } = useAccount();
@@ -60,6 +61,8 @@ export const ProfileView: React.FC = () => {
         />
         {error && <p className="text-sm text-danger mt-2">{error}</p>}
       </div>
+
+      <PlanCard />
 
       <section className="py-8 border-b border-line">
         <h2 className="text-xs font-bold uppercase tracking-widest text-ink-muted mb-4">Lectura</h2>

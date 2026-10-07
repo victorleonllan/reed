@@ -1,6 +1,7 @@
 # Spec R-019 — Plan, uso y pago de Reed Pro dentro de la app
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `tsc --noEmit` raíz y `frontend` verdes, `npm run lint` sin errores
+> (1 warning ajeno, en `src/app/opengraph-image.tsx`). Criterios 1-3 revisados en código; V5 pendiente.
 > Capa: FRONTEND. `frontend/src/components/profile/ProfileView.tsx`,
 > `frontend/src/components/billing/PlanCard.tsx` (nuevo),
 > `frontend/src/components/billing/UpgradeModal.tsx` (nuevo),
@@ -71,3 +72,14 @@ Montado en `App.tsx`, lee la URL al cargar:
 ## Fuera de alcance
 
 Cupones propios, facturas dentro de la app (las da el portal de Stripe).
+
+## Bugs encontrados al aplicar
+
+- **07-oct-2026 — «termina el <fecha>» no se puede distinguir de «se renueva el <fecha>».** Al
+  cancelar desde el portal, Stripe deja la suscripción en `cancel_at_period_end` con estado
+  `active`, y el webhook (R-010) guarda `status: "active"` + `renewsAt`; `GET /api/usage` no
+  expone si la renovación está cancelada. Resultado: una suscripción cancelada a fin de periodo
+  se muestra «Se renueva el <fecha>» hasta que vence, y después pasa a Gratis · Cancelado sin
+  fecha (`renewsAt: null`). `PlanCard` muestra «Termina el <fecha>» solo si llega
+  `status: "canceled"` con fecha. Arreglarlo pide un spec LÓGICA que guarde y exponga
+  `cancelAtPeriodEnd`.
