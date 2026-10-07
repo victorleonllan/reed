@@ -1,6 +1,8 @@
 # Spec R-016 — Correos con Resend: bienvenida y Reed Pro
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `tsc` (raíz y frontend) y `lint` verdes; plantillas
+> renderizadas con `tsx` (html + text, nombre escapado) y `sendEmail` sin clave registra «email omitido».
+> Webhook de Clerk con firma real y envío con Resend quedan para la verificación en ejecución.
 > Capa: LOGICA. `src/lib/resend.ts` (nuevo), `src/lib/emails.ts` (nuevo),
 > `src/app/api/webhooks/clerk/route.ts` (nuevo), `src/lib/stripe.ts` (solo `onProActivated`).
 > Depende de: R-001 (`resend`, `config.resend`), R-010 (`onProActivated` en `src/lib/stripe.ts`).

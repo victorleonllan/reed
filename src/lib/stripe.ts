@@ -1,6 +1,9 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import Stripe from "stripe";
 import { config } from "@/config";
+import { proActivatedEmail } from "./emails";
 import type { PlanInfo } from "./plan";
+import { sendEmail } from "./resend";
 
 /** STRIPE_SECRET_KEY (or a Pro price id) is missing: routes answer 503 instead of crashing. */
 export class PaymentsNotConfiguredError extends Error {
@@ -86,7 +89,18 @@ export function periodEnd(subscription: Stripe.Subscription): string | null {
   return end ? new Date(end * 1000).toISOString() : null;
 }
 
-/** Runs after a successful checkout. Empty for now; R-016 adds the welcome-to-Pro email here. */
+/** Runs after a successful checkout: sends the Reed Pro email. Failures are logged, never thrown. */
 export async function onProActivated(userId: string): Promise<void> {
-  void userId;
+  try {
+    const user = await (await clerkClient()).users.getUser(userId);
+    const email = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress;
+    if (!email) {
+      console.info(`Clerk user ${userId} has no email address; Reed Pro email not sent`);
+      return;
+    }
+    await sendEmail({ to: email, ...proActivatedEmail({ name: user.firstName }) });
+  } catch (err) {
+    // The plan is already saved; a missing email must not make Stripe retry the whole event.
+    console.error(`Reed Pro email for ${userId} failed:`, err);
+  }
 }

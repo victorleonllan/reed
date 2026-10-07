@@ -65,7 +65,7 @@ referencia, nunca se modifica).
 | R-013 | FRONTEND | Encabezado, navegación móvil, transición entre vistas, avisos | aplicado (07-oct-2026) |
 | R-014 | FRONTEND | Pantalla de acceso con los personajes | aplicado (07-oct-2026) |
 | R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | diseño |
-| R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | diseño |
+| R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | aplicado (07-oct-2026) |
 | R-017 | FRONTEND | Términos, privacidad, SEO (sitemap, robots, OG) y páginas de error | diseño |
 | R-018 | FRONTEND | Blog estático con tres artículos | diseño |
 | R-019 | FRONTEND | Plan, uso y pago dentro de la app; modal al llegar al límite | diseño |
