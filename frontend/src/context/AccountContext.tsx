@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useClerk, useUser } from '@clerk/clerk-react';
+import toast from 'react-hot-toast';
 import { Book, ReadingActivity, ReadingPrefs, ReadingStatus, UserBookRecord } from '../types';
 import { listLibrary, loadBookContent } from '../services/api';
 import { evaluateBadges, isNightHour, localDate } from '../lib/badges';
@@ -46,8 +47,6 @@ interface AccountContextValue {
   entries: LibraryEntry[];
   prefs: ReadingPrefs;
   activity: ReadingActivity;
-  toast: string | null;
-  dismissToast: () => void;
   register: (input: { name: string; email: string; password: string }) => Promise<string | null>;
   login: (email: string, password: string) => Promise<string | null>;
   recover: (email: string, password: string) => Promise<string | null>;
@@ -234,7 +233,6 @@ const AccountState: React.FC<{
   const [activity, setActivity] = useState<ReadingActivity>(emptyActivity());
   const [prefs, setPrefsState] = useState<ReadingPrefs>(defaultPrefs());
   const [ready, setReady] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const libraryRef = useRef(library);
   const activityRef = useRef(activity);
   libraryRef.current = library;
@@ -256,12 +254,6 @@ const AccountState: React.FC<{
     setReady(true);
   }, [user?.id]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 4200);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
   const commit = useCallback((nextLibrary: UserBookRecord[], nextActivity: ReadingActivity) => {
     if (!user) return;
     const evaluated = evaluateBadges(nextLibrary, nextActivity);
@@ -273,7 +265,7 @@ const AccountState: React.FC<{
     setActivity(evaluated.activity);
     if (evaluated.unlockedNow.length) {
       const names = evaluated.unlockedNow.map((badge) => badge.name).join(', ');
-      setToast(`Nuevo logro desbloqueado · ${names}`);
+      toast.success(`Nuevo logro desbloqueado · ${names}`);
     }
   }, [user]);
 
@@ -291,7 +283,9 @@ const AccountState: React.FC<{
       .then((books) => {
         if (!cancelled) setCatalog(books.filter((book): book is Book => Boolean(book && book.chapters.length)));
       })
-      .catch(() => !cancelled && setToast('No pude cargar tus libros. Recarga la página.'));
+      .catch(() => {
+        if (!cancelled) toast.error('No pude cargar tus libros. Recarga la página.');
+      });
     return () => {
       cancelled = true;
     };
@@ -398,8 +392,6 @@ const AccountState: React.FC<{
     entries,
     prefs,
     activity,
-    toast,
-    dismissToast: () => setToast(null),
     register,
     login,
     recover,
@@ -416,7 +408,7 @@ const AccountState: React.FC<{
     addReadingSeconds,
     getBook,
   }), [
-    ready, user, catalog, uploads, library, entries, prefs, activity, toast,
+    ready, user, catalog, uploads, library, entries, prefs, activity,
     register, login, recover, logout, setAvatar, setPrefs, isInLibrary, addToLibrary,
     addUploadedBook, saveProgress, recordReaderUse, recordQuiz, recordNightSession,
     addReadingSeconds, getBook,

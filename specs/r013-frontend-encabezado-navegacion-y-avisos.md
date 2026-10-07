@@ -1,6 +1,6 @@
 # Spec R-013 — Encabezado, navegación móvil y avisos
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; criterios 1 y 2 (375 px, indicador que se desliza) pendientes de ver en navegador.
 > Capa: FRONTEND. `frontend/src/components/ui/Header.tsx`, `frontend/src/components/ui/MobileNav.tsx`
 > (nuevo), `frontend/src/App.tsx`, `frontend/src/context/AccountContext.tsx`.
 > Depende de: R-001 (`react-hot-toast`, `motion`), R-003 (componentes base).
