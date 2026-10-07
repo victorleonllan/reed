@@ -24,6 +24,14 @@
   --color-highlight: #f4e2a8;
   --color-focus: #a44f10;
   --color-danger: #a3392b;
+
+  /* Elevation: soft, warm shadows (tinted with ink brown, never hard grey). */
+  --shadow-1: 0 1px 2px rgba(64, 46, 24, 0.06), 0 1px 3px rgba(64, 46, 24, 0.08);
+  --shadow-2: 0 2px 4px rgba(64, 46, 24, 0.06), 0 6px 16px rgba(64, 46, 24, 0.10);
+  --shadow-3: 0 4px 8px rgba(64, 46, 24, 0.07), 0 18px 40px rgba(64, 46, 24, 0.14);
+
+  /* Paper texture: SVG noise, 3.5% opacity. */
+  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
 .dark {
@@ -47,6 +55,14 @@
   --color-highlight: #4d4322;
   --color-focus: #eba766;
   --color-danger: #e8877a;
+
+  /* On dark paper a warm tint disappears: deeper, near-black shadows instead. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.24);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.30), 0 8px 20px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 4px 10px rgba(0, 0, 0, 0.34), 0 20px 44px rgba(0, 0, 0, 0.42);
+
+  /* The noise reads as dirt on dark paper: off. */
+  --texture-paper: none;
 }
 
 .reading-column,
@@ -56,6 +72,7 @@
 
 body {
   background-color: var(--color-paper);
+  background-image: var(--texture-paper);
   color: var(--color-ink);
   font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
   margin: 0;
@@ -67,6 +84,29 @@ body {
 *:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+@layer components {
+  /* Standard card: the base every screen builds on. */
+  .surface {
+    @apply bg-paper-raised border border-line rounded-md shadow-1;
+  }
+
+  /* Floating layer: modals, popovers, the card in focus. */
+  .surface-raised {
+    @apply bg-paper-raised border border-line rounded-lg shadow-2;
+  }
+
+  /* The reed: a thin vertical line (page marker, reading cursor, voice wave). Use sparingly. */
+  .reed-line {
+    @apply block w-[2px] min-h-4 self-stretch rounded-pill bg-reed;
+  }
+
+  /* Focus ring that survives overflow-hidden parents: drawn with box-shadow, not outline. */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-paper), 0 0 0 4px var(--color-focus);
+  }
 }
 
 /* Voice wave animation: breathes at 1.2s */

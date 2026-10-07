@@ -33,6 +33,21 @@ export default {
         serif: ['Literata', 'Georgia', 'serif'],
         sans: ['"Atkinson Hyperlegible"', 'system-ui', 'sans-serif'],
       },
+      // Type scale. Pair display/title/heading/body with font-serif (Literata: titles and
+      // reading) and small/caption with font-sans (Atkinson Hyperlegible: the UI).
+      fontSize: {
+        display: ['2.75rem', { lineHeight: '1.1', letterSpacing: '-0.015em', fontWeight: '600' }],
+        title: ['2rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '600' }],
+        heading: ['1.375rem', { lineHeight: '1.3', fontWeight: '600' }],
+        body: ['1.0625rem', { lineHeight: '1.65' }],
+        small: ['0.875rem', { lineHeight: '1.25rem' }],
+        caption: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.01em' }],
+      },
+      boxShadow: {
+        1: 'var(--shadow-1)',
+        2: 'var(--shadow-2)',
+        3: 'var(--shadow-3)',
+      },
       borderRadius: {
         'sm': '6px',
         'md': '12px',

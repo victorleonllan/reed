@@ -1,6 +1,6 @@
 # Spec R-003 — Sistema visual: tokens, tipografía y componentes base
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `tsc --noEmit` (raíz y `frontend`) y `npm run lint` en verde; `tailwindcss` compila `index.css`; sin `Sparkles` ni violeta/cian; contraste ink/ink-muted ≥ 5.4:1 sobre paper y paper-raised en ambos temas (sin cambiar valores).
 > Capa: FRONTEND. `frontend/src/index.css`, `frontend/tailwind.config.js`, `frontend/index.html`,
 > `frontend/src/components/ui/Button.tsx`, `frontend/src/components/ui/Badge.tsx`,
 > `frontend/src/components/ui/ProgressBar.tsx`, `frontend/src/components/ui/ThemeToggle.tsx`,

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { IconButton } from './IconButton';
+
+const iconBase = 'absolute inset-0 transition-[opacity,transform] duration-states ease-out';
+const iconOn = 'opacity-100 rotate-0 scale-100';
+const iconOff = 'opacity-0 scale-75';
 
 export const ThemeToggle: React.FC = () => {
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -18,17 +23,18 @@ export const ThemeToggle: React.FC = () => {
   }, [isDark]);
 
   return (
-    <button
+    <IconButton
+      variant="outline"
       onClick={() => setIsDark(!isDark)}
       title={isDark ? 'Cambiar a tema Papiro' : 'Cambiar a tema Noche'}
-      className="p-2 rounded-md border border-line hover:bg-paper-sunk text-ink transition-colors duration-states flex items-center justify-center"
-      aria-label="Cambiar tema de lectura"
+      aria-label="Tema Noche"
+      aria-pressed={isDark}
     >
-      {isDark ? (
-        <Sun size={20} strokeWidth={1.75} />
-      ) : (
-        <Moon size={20} strokeWidth={1.75} />
-      )}
-    </button>
+      {/* Both icons stay mounted so they can cross-fade and rotate instead of popping. */}
+      <span className="relative h-5 w-5">
+        <Moon size={20} strokeWidth={1.75} aria-hidden="true" className={`${iconBase} ${isDark ? `${iconOff} -rotate-90` : iconOn}`} />
+        <Sun size={20} strokeWidth={1.75} aria-hidden="true" className={`${iconBase} ${isDark ? iconOn : `${iconOff} rotate-90`}`} />
+      </span>
+    </IconButton>
   );
 };
