@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, X } from 'lucide-react';
 import { ConversationMessage, Paragraph } from '../../types';
+import { IconButton } from '../ui/IconButton';
+import { Surface } from '../ui/Surface';
 import { AskBubble } from './AskBubble';
-import { ArrowRight, X, Sparkles } from 'lucide-react';
+
+const SUGGESTED_QUESTION = '¿Qué significa esto?';
 
 interface AskFieldProps {
   selectedParagraph: Paragraph | null;
@@ -9,121 +13,110 @@ interface AskFieldProps {
   onSendMessage: (text: string, quote?: string) => void;
   onClose: () => void;
   isThinking?: boolean;
+  /** Optional: carry the question over to Reed's panel (teacher mode). */
+  onContinueWithReed?: () => void;
 }
 
+/** The space to ask, attached right under the paragraph that was tapped. */
 export const AskField: React.FC<AskFieldProps> = ({
   selectedParagraph,
   conversation,
   onSendMessage,
   onClose,
   isThinking = false,
+  onContinueWithReed,
 }) => {
   const [question, setQuestion] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!question.trim()) return;
+  useEffect(() => {
+    inputRef.current?.focus({ preventScroll: true });
+  }, []);
 
-    onSendMessage(question.trim(), selectedParagraph?.text);
+  const send = (text: string) => {
+    if (!text.trim() || isThinking) return;
+    onSendMessage(text.trim(), selectedParagraph?.text);
     setQuestion('');
   };
 
-  const handleQuickQuestion = (quickText: string) => {
-    onSendMessage(quickText, selectedParagraph?.text);
-  };
-
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-paper-raised border-l border-line shadow-2xl z-50 flex flex-col animate-slideLeft transition-colors duration-panels">
-      {/* Encabezado del panel de preguntas */}
-      <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-[3px] h-5 bg-reed rounded-full" />
-          <h3 className="font-serif font-semibold text-lg text-ink">
-            Conversar con Reed
-          </h3>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper-sunk transition-colors"
-          aria-label="Cerrar panel de conversación"
-        >
-          <X size={18} strokeWidth={1.75} />
-        </button>
+    <Surface
+      padding="sm"
+      className="mt-3 text-ink font-sans animate-fadeIn"
+      onClick={(event: React.MouseEvent) => event.stopPropagation()}
+      onKeyDown={(event: React.KeyboardEvent) => {
+        if (event.key === 'Escape') onClose();
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-xs uppercase tracking-wider text-ink-muted">Pregúntale a Reed</span>
+        <IconButton aria-label="Cerrar pregunta" size="sm" className="-mr-1 text-ink-muted" onClick={onClose}>
+          <X size={16} strokeWidth={1.75} />
+        </IconButton>
       </div>
 
-      {/* Cita del párrafo seleccionado (como en Slide 09) */}
-      {selectedParagraph && (
-        <div className="p-4 bg-paper border-b border-line">
-          <span className="block text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1.5 font-sans">
-            SOBRE ESTE PÁRRAFO
-          </span>
-          <p className="font-serif italic text-sm text-ink line-clamp-3 leading-relaxed">
-            “{selectedParagraph.text}”
-          </p>
+      {conversation.length > 0 && (
+        <div className="space-y-3 mb-3" aria-live="polite">
+          {conversation.map((msg) => (
+            <AskBubble key={msg.id} message={msg} />
+          ))}
         </div>
       )}
 
-      {/* Historial de mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-        {conversation.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-ink text-sm font-medium mb-1 font-sans">
-              ¿Algo no te quedó claro? Pregúntame.
-            </p>
-            <p className="text-xs text-ink-muted font-sans">
-              Reed ya leyó el capítulo y te lo explica con calma.
-            </p>
-
-            {/* Sugerencias rápidas */}
-            <div className="mt-5 flex flex-col gap-2">
-              <button
-                onClick={() => handleQuickQuestion('¿Qué significa esto en palabras sencillas?')}
-                className="text-left text-xs p-2.5 rounded-md bg-paper border border-line hover:border-line-strong text-ink transition-colors"
-              >
-                «¿Qué significa esto en palabras sencillas?»
-              </button>
-              <button
-                onClick={() => handleQuickQuestion('¿Por qué es importante este momento en la historia?')}
-                className="text-left text-xs p-2.5 rounded-md bg-paper border border-line hover:border-line-strong text-ink transition-colors"
-              >
-                «¿Por qué es importante este momento en la historia?»
-              </button>
-            </div>
-          </div>
-        ) : (
-          conversation.map((msg) => (
-            <AskBubble key={msg.id} message={msg} />
-          ))
-        )}
-
-        {isThinking && (
-          <div className="flex items-center gap-2 text-xs text-ink-muted py-2">
-            <span className="w-2 h-2 rounded-full bg-reed animate-pulse" />
-            <span className="font-sans">Reed está pensando...</span>
-          </div>
-        )}
-      </div>
-
-      {/* Input de pregunta: matches Slide 09 AskField */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-line bg-paper-raised">
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Pregúntale lo que quieras sobre este párrafo..."
-            className="w-full pl-3.5 pr-12 py-3 rounded-md bg-paper border border-line-strong text-ink placeholder:text-ink-muted text-sm focus:border-focus transition-colors"
-          />
-          <button
-            type="submit"
-            disabled={!question.trim()}
-            className="absolute right-1.5 p-2 rounded-md bg-reed text-on-reed disabled:bg-paper-sunk disabled:text-ink-muted transition-colors hover:bg-reed-strong"
-            title="Enviar pregunta"
-          >
-            <ArrowRight size={16} strokeWidth={2} />
-          </button>
+      {isThinking && (
+        <div className="flex items-center gap-2 text-xs text-ink-muted mb-3" role="status">
+          <span className="w-2 h-2 rounded-full bg-reed animate-pulse" aria-hidden="true" />
+          <span>Reed está pensando…</span>
         </div>
+      )}
+
+      {conversation.length === 0 && !isThinking && (
+        <button
+          type="button"
+          onClick={() => send(SUGGESTED_QUESTION)}
+          className="focus-ring mb-3 text-left text-sm px-3 py-2 rounded-md bg-paper border border-line hover:border-line-strong transition-colors duration-states"
+        >
+          «{SUGGESTED_QUESTION}»
+        </button>
+      )}
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          send(question);
+        }}
+        className="relative flex items-center"
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          placeholder="Pregunta lo que quieras sobre este párrafo"
+          aria-label="Tu pregunta sobre este párrafo"
+          className="w-full pl-3.5 pr-12 py-2.5 rounded-md bg-paper border border-line-strong text-ink placeholder:text-ink-muted text-sm focus:border-focus focus-ring transition-colors"
+        />
+        <IconButton
+          type="submit"
+          aria-label="Enviar pregunta"
+          variant="primary"
+          size="sm"
+          disabled={!question.trim() || isThinking}
+          className="absolute right-1.5"
+        >
+          <ArrowRight size={16} strokeWidth={2} />
+        </IconButton>
       </form>
-    </div>
+
+      {onContinueWithReed && (
+        <button
+          type="button"
+          onClick={onContinueWithReed}
+          className="focus-ring mt-2 text-xs text-ink-muted hover:text-ink underline-offset-2 hover:underline rounded-sm"
+        >
+          Seguir la conversación con Reed
+        </button>
+      )}
+    </Surface>
   );
 };

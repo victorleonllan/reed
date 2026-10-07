@@ -1,6 +1,6 @@
 # Spec R-011 — La pantalla de lectura: calma, «dónde quedaste» y el junco como progreso
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; `ReaderView.tsx` en 449 líneas. Sin verificación en navegador (queda para la mañana).
 > Capa: FRONTEND. `frontend/src/components/reader/ReaderView.tsx`,
 > `frontend/src/components/reader/ReadingParagraph.tsx`,
 > `frontend/src/components/reader/ListenBar.tsx`, `frontend/src/components/reader/AskBubble.tsx`,
@@ -86,3 +86,21 @@ para que corra su animación de salida (la define R-008 en el mismo paso). No to
 
 - El contenido de los modos de Reed (R-009) y la conversación por voz (R-015).
 - Encabezado global de la app (R-013).
+
+## Bugs encontrados al aplicar (07-oct-2026)
+
+- **«La lógica se queda» y «< 450 líneas» no caben juntos.** Solo la lógica de `ReaderView`
+  (progreso, sesión, teclado, scroll infinito, escucha) ocupaba ~410 líneas antes de cualquier
+  JSX. Para cumplir el criterio 5 sin crear archivos fuera de la capa se movieron dos piezas
+  autocontenidas: el motor de voz por párrafo (ElevenLabs con precarga → voz del navegador) como
+  `useParagraphVoice()` en `ListenBar.tsx`, y el auto-ocultado de los controles como
+  `useIdleChrome()` en `ReadingSettings.tsx`. La orquestación de la escucha (qué párrafo, avance
+  de página, play/pausa, velocidad) sigue en `ReaderView`. También se quitaron dos refs muertas
+  (`skipSpeechReset`, nunca puesta en `true`, y `playingRef`, nunca leída).
+- **«Progreso > 0» se interpretó como «abre más allá de la primera página».** Abrir un libro
+  guarda la página 1 al instante (`onProgress` en el montaje), así que con `progress > 0` todo
+  libro abierto una vez mostraría «Quedaste en Capítulo 1» encima del capítulo 1.
+- **El índice del libro («Contenido») se mudó a `ReadingProgressRail.tsx` como `ChapterDrawer`**,
+  junto al riel: ambos saltan de capítulo. Y la página del scroll infinito quedó como
+  `ReadingPage` en `ReadingParagraph.tsx`.
+
