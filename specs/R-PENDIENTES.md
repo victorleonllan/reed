@@ -16,6 +16,8 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
   modo dormido, en claro y oscuro.
 - **V7** (R-016) — correo de bienvenida al crear cuenta y de Pro al pagar (con Resend y webhook
   de Clerk registrados).
+- **V8** (R-020) — bienvenida en un navegador limpio: aparece la primera vez y no la segunda;
+  elegir un modo al final lo deja en el botón de Reed; Escape y «Saltar» la cierran; móvil y escritorio.
 
 ## Decisiones abiertas de Victor
 

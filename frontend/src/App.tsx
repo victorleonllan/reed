@@ -12,6 +12,7 @@ import { AuthScreen } from './components/auth/AuthScreen';
 import { AuthProvider } from './components/auth/ClerkAuthProvider';
 import { CheckoutReturn } from './components/billing/CheckoutReturn';
 import { UpgradeModal } from './components/billing/UpgradeModal';
+import { Onboarding } from './components/reed/Onboarding';
 import { AccountProvider, useAccount } from './context/AccountContext';
 import { ReedProvider } from './context/ReedContext';
 
@@ -94,6 +95,7 @@ const AppShell: React.FC = () => {
       />
       <CheckoutReturn />
       <UpgradeModal />
+      <Onboarding />
 
       {/* Short fade + 6px rise between views; only the fade with reduced motion. */}
       <AnimatePresence mode="wait" initial={false}>

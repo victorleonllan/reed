@@ -1,6 +1,7 @@
 # Spec R-020 — Bienvenida: Reed presenta sus cinco modos la primera vez
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y
+> `npm run lint` en verde. Pendiente en ejecución: V8 de `R-PENDIENTES.md`.
 > Capa: FRONTEND. `frontend/src/components/reed/Onboarding.tsx` (nuevo), `frontend/src/App.tsx`.
 > Depende de: R-004 (`ReedCharacter`, `portraits.ts`), R-008 (transición del junco),
 > R-019 (`App.tsx` ya con `UpgradeModal` y `CheckoutReturn`).
