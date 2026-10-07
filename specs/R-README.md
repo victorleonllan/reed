@@ -58,7 +58,7 @@ referencia, nunca se modifica).
 | R-006 | LÓGICA | Plan en la metadata de Clerk y límites de uso por plan | aplicado (07-oct) |
 | R-007 | FRONTEND | Biblioteca y almacén: portadas generadas, «sigue leyendo», subida | aplicado (07-oct-2026) |
 | R-008 | FRONTEND | Transición animada entre modos (el junco que se dobla) y personajes vivos | aplicado (07-oct) |
-| R-009 | FRONTEND | Los modos usan la IA real: sin Macondo ni datos inventados | diseño |
+| R-009 | FRONTEND | Los modos usan la IA real: sin Macondo ni datos inventados | aplicado (07-oct-2026) |
 | R-010 | LÓGICA | Cobro de Reed Pro con Stripe: checkout, portal, webhook | aplicado (07-oct-2026) |
 | R-011 | FRONTEND | Pantalla de lectura: «dónde quedaste», riel de progreso, ajustes, escucha | diseño |
 | R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | diseño |

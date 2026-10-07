@@ -37,10 +37,18 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
 const postJson = async <T,>(path: string, body: unknown): Promise<T> =>
   (await apiFetch(path, { method: 'POST', body: JSON.stringify(body) })).json();
 
+const REED_LIMIT_MESSAGE = 'Por hoy llegamos al límite de respuestas de Reed. Vuelve mañana y seguimos.';
+const REED_FAILED_MESSAGE = 'Reed no pudo responder en este momento. Inténtalo de nuevo en unos segundos.';
+
 const reedErrorMessage = (err: unknown) =>
-  err instanceof ApiError && err.status === 429
-    ? 'Por hoy llegamos al límite de respuestas de Reed. Vuelve mañana y seguimos.'
-    : 'Reed no pudo responder en este momento. Inténtalo de nuevo en unos segundos.';
+  err instanceof ApiError && err.status === 429 ? REED_LIMIT_MESSAGE : REED_FAILED_MESSAGE;
+
+/** True when an explain/summarize result is Reed's error message, so callers don't cache it. */
+export const isReedError = (text: string) => text === REED_LIMIT_MESSAGE || text === REED_FAILED_MESSAGE;
+
+// Demo mode (signed out): Reed can't read the book, so it says so instead of making something up.
+const DEMO_EXPLAIN = 'En modo demo no puedo leer este libro contigo. Entra con tu cuenta y te lo explico de verdad.';
+const DEMO_SUMMARY = 'En modo demo no puedo leer este libro contigo. Entra con tu cuenta y te cuento lo que llevamos.';
 
 // ---------- Reed AI (explain / summarize / quiz) ----------
 
@@ -53,19 +61,7 @@ export async function explainParagraph(paragraphText: string, userQuestion: stri
       return reedErrorMessage(err);
     }
   }
-
-  // Demo mode (no sign-in): fallback explicativo con la voz y tono de Reed.
-  if (paragraphText.toLowerCase().includes('cañabrava')) {
-    return 'Una caña silvestre, pariente del junco. Con ella se armaban las paredes de las primeras casas.';
-  }
-  if (paragraphText.toLowerCase().includes('junco')) {
-    return 'El junco sobrevive porque se adapta al viento en lugar de resistirlo con rigidez. Cuando pasa la tormenta, vuelve a levantarse.';
-  }
-  if (paragraphText.toLowerCase().includes('imán') || paragraphText.toLowerCase().includes('melquíades')) {
-    return 'Melquíades trae la tecnología de su época como un espectáculo mágico. José Arcadio Buendía ve en esos imanes el poder de transformar su aldea.';
-  }
-
-  return `En este fragmento se destaca cómo los personajes perciben lo desconocido. Es un momento clave para entender la curiosidad que impulsa la historia.`;
+  return DEMO_EXPLAIN;
 }
 
 export async function summarizeChapter(chapterTitle: string, paragraphsText: string): Promise<string> {
@@ -77,8 +73,7 @@ export async function summarizeChapter(chapterTitle: string, paragraphsText: str
       return reedErrorMessage(err);
     }
   }
-
-  return `Quedaste en la llegada de Melquíades y la fascinación por los nuevos inventos. José Arcadio Buendía queda obsesionado con los imanes y su potencial para extraer metales preciosos, mostrando el espíritu fundacional y fantástico de Macondo.`;
+  return DEMO_SUMMARY;
 }
 
 export async function generateQuiz(chapterTitle: string, paragraphsText: string): Promise<QuizQuestion[]> {
@@ -91,27 +86,23 @@ export async function generateQuiz(chapterTitle: string, paragraphsText: string)
     }
   }
 
+  // Demo quiz: about how Reed works, never about a book Reed couldn't read.
   return [
     {
-      id: 'q-1',
-      question: '¿Qué objeto trajo Melquíades en su primera visita a la aldea?',
-      options: ['Un telescopio astronómico', 'Dos lingotes metálicos (imanes)', 'Una lupa gigante', 'Una brújula de oro'],
-      correctIndex: 1,
-      explanation: 'Melquíades presentó los imanes como la octava maravilla de los sabios alquimistas.'
-    },
-    {
-      id: 'q-2',
-      question: '¿De qué material estaban construidas las primeras casas de Macondo?',
-      options: ['Ladrillo y teja cocida', 'Piedras de río pulidas', 'Barro y cañabrava', 'Madera de encina'],
+      id: 'demo-q-1',
+      question: '¿Qué modo de Reed te lee el libro en voz alta?',
+      options: ['Compañero', 'Profesor', 'Lector', 'Bibliotecario'],
       correctIndex: 2,
-      explanation: 'Macondo era una aldea de veinte casas hechas de barro y cañabrava a la orilla del río.'
+      explanation: 'El modo Lector lee en voz alta desde el párrafo que elijas, a tu ritmo.',
+      type: 'multiple'
     },
     {
-      id: 'q-3',
-      question: '¿Por qué el junco supera la tempestad según la fábula?',
-      options: ['Porque sus raíces son más profundas que las de la encina', 'Porque se dobla con el viento en lugar de quebrarse', 'Porque el agua lo protege de la tormenta', 'Porque la encina lo resguarda bajo sus ramas'],
+      id: 'demo-q-2',
+      question: 'Si un pasaje no te queda claro, ¿qué hace el modo Profesor?',
+      options: ['Te da la respuesta de inmediato', 'Te da una pista primero y, si quieres, te lo explica', 'Te pone una nota', 'Te cambia de libro'],
       correctIndex: 1,
-      explanation: 'El principio de Reed: se dobla, no exige. La flexibilidad le permite resistir la fuerza del viento.'
+      explanation: 'Reed empieza con una pista para que llegues tú; si prefieres, te lo explica directo. Aquí no hay notas.',
+      type: 'multiple'
     }
   ];
 }

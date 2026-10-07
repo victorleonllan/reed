@@ -1,6 +1,6 @@
 # Spec R-009 — Reed sin datos inventados: los modos usan la IA real
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `tsc --noEmit` raíz y `-p frontend` verdes, `npm run lint` verde; grep de Macondo vacío; sin llamadas a `/api/ai/*` en `useEffect`. Pendiente V# en ejecución con sesión (ver addenda).
 > Capa: FRONTEND. `frontend/src/components/reed/modes/CompanionMode.tsx`,
 > `frontend/src/components/reed/modes/TeacherMode.tsx`,
 > `frontend/src/components/reed/modes/SessionTestFlow.tsx`, `frontend/src/services/api.ts`.
@@ -91,3 +91,19 @@ mantiene, pero sobre lo que el usuario pregunta del pasaje real:
 - La conversación por voz (R-015) y el modo Bibliotecario (su búsqueda local sobre la biblioteca
   es real; se queda).
 - Cambiar los prompts del backend (`src/lib/reed-ai.ts`).
+
+## Bugs encontrados al aplicar (07-oct-2026)
+
+- **La sesión se reinicia en cada página.** `ReaderView` llama a `startSession` cada vez que cambia
+  `pageIndex`, y las páginas son de ~520 caracteres (`TARGET_CHARS` en `lib/reading.ts`). Así,
+  `startParagraphOrder…endParagraphOrder` casi nunca suma 600 caracteres: el test de sesión dirá
+  casi siempre «Todavía leímos poco juntos» y el resumen de sesión cubre solo la página actual.
+  Además los `order` son por capítulo, así que una sesión que cruza capítulos no se puede
+  expresar con ese rango. Se implementó lo que dice el diseño; arreglarlo pide un spec nuevo
+  sobre `ReaderView`/`ReedContext` (sesión por libro con posición global).
+- **`socraticQuery` no existía** en `TeacherMode` (el diseño dice «ya existe»). Se creó el campo.
+- Detalle de implementación: `isReedError` se exporta desde `services/api.ts` (función nueva, no
+  cambia firmas) para no guardar en memoria un mensaje de error y permitir reintentar. El estado
+  de espera, la caché y `sessionText` viven en `SessionTestFlow.tsx` y los importan los otros dos
+  modos, para no crear un archivo fuera de los declarados. La caché es de módulo: dura mientras
+  vive la app, no solo el panel (por libro y pasaje, separada entre demo y sesión).
