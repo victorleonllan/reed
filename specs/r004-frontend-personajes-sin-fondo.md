@@ -73,3 +73,15 @@ pesa ~900 KB y hay copias `.jpg` sin uso.
 ## Fuera de alcance
 
 Animar al personaje o el cambio de modo: es R-008, que construye sobre `ReedCharacter`.
+
+## Bugs encontrados al aplicar
+
+**07-oct-2026 — ojos y bufandas con agujeros.** Los PNG de origen no solo tenían el fondo
+transparente: el recorte original había borrado también los píxeles oscuros **dentro** del
+personaje (pupilas e iris, el párpado del modo dormido, huecos del tejido de la bufanda). Mientras
+cada retrato vivía en su caja con `bg-paper-raised`, ese fondo rellenaba los agujeros y no se
+notaba; al quitar la caja (este spec) la página se veía a través de los ojos. Corrección: se
+tomaron los `.jpg` originales (fondo negro, sin agujeros, borrados en el commit de este spec), se
+rellenaron con sus colores las zonas transparentes que no tocan el borde de la imagen (+2 px de
+borde suave) y se repitió la conversión de arriba (trim, 640 px de alto, `cwebp -q 85
+-alpha_q 100`). Pesos nuevos: 53,7–60,3 KB, mismas dimensiones (±1 px).
