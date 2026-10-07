@@ -1,6 +1,6 @@
 # Spec R-017 — Términos, privacidad, SEO y páginas de error
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `tsc --noEmit` raíz y `-p frontend`, `npm run lint` verdes; la imagen OG se renderizó fuera de Next con el mismo motor de `next/og` (1200×630, PNG). Pendiente V4 en ejecución.
 > Capa: FRONTEND. `src/app/(marketing)/tos/page.tsx`, `src/app/(marketing)/privacy-policy/page.tsx`,
 > `src/lib/seo.ts`, `src/app/sitemap.ts`, `src/app/robots.ts`, `src/app/opengraph-image.tsx`,
 > `src/app/not-found.tsx`, `src/app/error.tsx` (todos nuevos).
@@ -54,3 +54,16 @@ imagen Open Graph, la landing no se indexa bien ni se ve bien al compartirla. Sh
 ## Fuera de alcance
 
 Revisión legal real. El blog (R-018).
+
+## Bugs encontrados al aplicar (07-oct-2026)
+
+- **`ImageResponse` no decodifica WebP.** El motor de `next/og` en Next 16.3.6 solo acepta PNG,
+  APNG, JPEG, GIF y SVG (lista de tipos en `next/dist/compiled/@vercel/og/index.node.js`), así que
+  `/reed/companion.webp` no sirve ni por sistema de archivos ni por URL. Se agregó
+  `src/app/_og/companion.png` (copia del WebP decodificada con `dwebp` y escalada a 421×520,
+  ≈ 220 KB); la carpeta `_og` es privada y no crea ruta. Sin `sharp` como dependencia directa no
+  hay conversión en tiempo de ejecución.
+- **`reset()` → `retry()` en `error.tsx`.** En Next 16.3 el error boundary recibe `retry()`
+  (vuelve a pedir y renderizar el segmento) y la guía lo recomienda sobre `reset()` (solo
+  re-renderiza, así que un fallo del servidor se repite). El botón «Reintentar» usa `retry()`.
+
