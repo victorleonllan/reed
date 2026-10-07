@@ -1,0 +1,104 @@
+# Specs — Reed v2
+
+Reed es la app del equipo en Innovathon 2.0 (2.º lugar, 26-sep-2026): un compañero de lectura
+con IA que lee en voz alta, resume y responde preguntas. Este repo es el **fork de Victor**
+(`victorleonllan/reed`) del original `Afaguayo/hackathon`. El remoto `upstream` (Angel) está
+bloqueado para push a propósito.
+
+La v2 (diseñada el 07-oct-2026) convierte el prototipo en **producto con cobro**: landing,
+cobro con Stripe, correos, analítica, una estética pulida, los personajes sin fondo y la
+transición animada entre modos. Toma lo mejor de ShipeaRapido (`~/projects/shipearapido`, solo
+referencia, nunca se modifica).
+
+## Numeración y capas
+
+- Specs `R-NNN`, archivo `rNNN-<capa>-<titulo>.md`. Commit: `feat(spec-R0NN): …`.
+- Un spec toca **una** capa: DATOS → LÓGICA → FRONTEND.
+- **No hay specs DATOS en la v2**: decisión de Victor (07-oct-2026), la corrida de noche no
+  toca la base Neon. El plan de pago vive en la metadata de Clerk (R-006).
+- Los specs son inmutables en el diseño; los errores encontrados al aplicar van en una addenda
+  fechada («Bugs encontrados al aplicar»).
+
+## Reglas para quien ejecuta (agentes de la cadena)
+
+1. **No instales nada** (`npm install`, `npm ci`) **ni corras `npm run build`**: todas las
+   dependencias entraron en R-001, y el build completo hace `npm ci` en `frontend/` y vacía
+   `public/app/`, rompiendo a los otros agentes que trabajan en paralelo. Tu verificación es
+   `npx tsc --noEmit && npx tsc --noEmit -p frontend && npm run lint`. La cadena corre el build
+   completo una vez por paso, cuando ya no hay agentes vivos.
+2. **No levantes servidores** (`npm run dev`, `next dev`, `next start`): comparten `.next/` y
+   puertos. Las verificaciones en ejecución están anotadas como `V#` en `R-PENDIENTES.md` para
+   la mañana.
+3. **No toques la base**: ni `src/db/schema.ts`, ni `drizzle/`, ni `npm run db:*`.
+4. **Next 16 no es el Next que conoces**: antes de escribir código de Next, lee la guía en
+   `node_modules/next/dist/docs/` (lo dice `AGENTS.md`). `src/proxy.ts` es el antiguo middleware.
+5. Comentarios de código en inglés (como el resto del repo); textos de interfaz en **español
+   neutro, de tú**.
+6. **Tono de Reed** (alma de marca): curioso, cálido, claro; tranquilo; humor ligero. Nunca
+   académico, apurado ni condescendiente. El usuario nunca siente culpa por no leer, vergüenza
+   por preguntar ni apuro.
+7. **Estética prohibida**: chispas ✨ (incluido el ícono `Sparkles` de lucide), robots,
+   cerebros, búhos, degradado violeta→cian, fotos de stock. **Nada inventado**: ni testimonios,
+   ni cifras de usuarios, ni logos.
+8. Respeta `prefers-reduced-motion` en toda animación.
+9. Sin claves (Stripe, Resend, PostHog, ElevenLabs), todo compila y degrada con un mensaje
+   claro: nunca un crash.
+10. Al cerrar: cambia **solo tu fila** de la tabla de abajo (columna Estado) y la línea
+    `> Estado:` de tu spec.
+
+## Índice
+
+| Spec | Capa | Qué hace | Estado |
+|---|---|---|---|
+| R-001 | LÓGICA | Dependencias de toda la v2, `.env.example` y `src/config.ts` (planes, precios) | diseño |
+| R-002 | FRONTEND | `ReedModePanel` partido en un componente por modo (refactor) | diseño |
+| R-003 | FRONTEND | Sistema visual: tokens, tipografía, `Button`, `Surface`, `IconButton` | diseño |
+| R-004 | FRONTEND | Personajes sin fondo ni marco: WebP, `ReedCharacter` | diseño |
+| R-005 | LÓGICA | Landing en `/`, app en `/app`, layout de Next con las fuentes de Reed | diseño |
+| R-006 | LÓGICA | Plan en la metadata de Clerk y límites de uso por plan | diseño |
+| R-007 | FRONTEND | Biblioteca y almacén: portadas generadas, «sigue leyendo», subida | diseño |
+| R-008 | FRONTEND | Transición animada entre modos (el junco que se dobla) y personajes vivos | diseño |
+| R-009 | FRONTEND | Los modos usan la IA real: sin Macondo ni datos inventados | diseño |
+| R-010 | LÓGICA | Cobro de Reed Pro con Stripe: checkout, portal, webhook | diseño |
+| R-011 | FRONTEND | Pantalla de lectura: «dónde quedaste», riel de progreso, ajustes, escucha | diseño |
+| R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | diseño |
+| R-013 | FRONTEND | Encabezado, navegación móvil, transición entre vistas, avisos | diseño |
+| R-014 | FRONTEND | Pantalla de acceso con los personajes | diseño |
+| R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | diseño |
+| R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | diseño |
+| R-017 | FRONTEND | Términos, privacidad, SEO (sitemap, robots, OG) y páginas de error | diseño |
+| R-018 | FRONTEND | Blog estático con tres artículos | diseño |
+| R-019 | FRONTEND | Plan, uso y pago dentro de la app; modal al llegar al límite | diseño |
+| R-020 | FRONTEND | Bienvenida: Reed presenta sus cinco modos | diseño |
+| R-021 | FRONTEND | Analítica con PostHog (landing y app) | diseño |
+| R-022 | LÓGICA | README de la v2 y guía para poner en marcha el fork | diseño |
+
+## Cadena de ejecución (herdr)
+
+Siete pasos; dentro de un paso los specs corren en paralelo (un agente cada uno) porque no
+dependen entre sí ni comparten archivos. Entre pasos, `spec-fleet-cadena` corre `npm run build`
+completo.
+
+```
+1  R-001 + R-002 + R-003
+2  R-004 + R-005 + R-006
+3  R-007 + R-008 + R-009 + R-010 + R-011
+4  R-012 + R-013 + R-014 + R-015 + R-016
+5  R-017 + R-019
+6  R-018 + R-020 + R-021
+7  R-022
+```
+
+Comando (desde un pane de herdr):
+
+```
+spec-fleet-cadena reed:R001+reed:R002+reed:R003 reed:R004+reed:R005+reed:R006 \
+  reed:R007+reed:R008+reed:R009+reed:R010+reed:R011 \
+  reed:R012+reed:R013+reed:R014+reed:R015+reed:R016 \
+  reed:R017+reed:R019 reed:R018+reed:R020+reed:R021 reed:R022
+```
+
+Al final hace `git push origin HEAD` al fork. Si un paso falla, se detiene; se arregla y se
+vuelve a correr **el mismo comando**: salta lo ya aplicado.
+
+Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).
