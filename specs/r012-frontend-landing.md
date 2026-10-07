@@ -1,6 +1,6 @@
 # Spec R-012 — La landing de Reed (portada, modos, precios y FAQ)
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `tsc` raíz y `frontend` + `lint` verdes; revisión en navegador pendiente (V2).
 > Capa: FRONTEND. `src/app/(marketing)/page.tsx`, `src/app/(marketing)/layout.tsx` (nuevo),
 > `src/components/marketing/SiteHeader.tsx`, `src/components/marketing/SiteFooter.tsx`,
 > `src/components/marketing/Hero.tsx`, `src/components/marketing/Problem.tsx`,
@@ -108,3 +108,14 @@ exporta `metadata` con título y descripción de `config`.
 ## Fuera de alcance
 
 Páginas legales y SEO (R-017), blog (R-018), analítica (R-021).
+
+## Bugs encontrados al aplicar (07-oct-2026)
+
+- **`<SignedIn>` ya no existe en `@clerk/nextjs` 7 (Clerk Core 3).** El paquete lo exporta solo
+  como stub que lanza un error al renderizarse. `SiteHeader` usa su reemplazo,
+  `<Show when="signed-in" fallback={…}>`: «Ir a mi biblioteca» con sesión, «Abrir Reed» sin ella.
+  Como `SiteHeader` es componente de cliente, `Show` resuelve a la versión de cliente (lee la
+  sesión en el navegador) y la portada no se vuelve dinámica.
+- **`<main>` en el layout.** `(marketing)/layout.tsx` pone el único `<main id="contenido">`
+  (con enlace «Saltar al contenido»), así que `page.tsx` y las páginas de R-017/R-018 no deben
+  abrir otro `<main>`.

@@ -61,7 +61,7 @@ referencia, nunca se modifica).
 | R-009 | FRONTEND | Los modos usan la IA real: sin Macondo ni datos inventados | aplicado (07-oct-2026) |
 | R-010 | LÓGICA | Cobro de Reed Pro con Stripe: checkout, portal, webhook | aplicado (07-oct-2026) |
 | R-011 | FRONTEND | Pantalla de lectura: «dónde quedaste», riel de progreso, ajustes, escucha | aplicado (07-oct-2026) |
-| R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | diseño |
+| R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | aplicado (07-oct-2026) |
 | R-013 | FRONTEND | Encabezado, navegación móvil, transición entre vistas, avisos | aplicado (07-oct-2026) |
 | R-014 | FRONTEND | Pantalla de acceso con los personajes | aplicado (07-oct-2026) |
 | R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | aplicado (07-oct-2026) |
