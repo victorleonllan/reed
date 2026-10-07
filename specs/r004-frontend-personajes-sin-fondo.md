@@ -1,6 +1,6 @@
 # Spec R-004 — Los personajes de Reed sin fondo ni marco
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `tsc --noEmit` raíz y `-p frontend`, `npm run lint` verdes; criterios 1 y 4 por grep (sin `rounded-[4px] overflow-hidden`, sin imports .png/.jpg de personajes); WebP 44,9–56,2 KB en `assets/reed/` y `public/reed/`. Pendiente la revisión visual (V6).
 > Capa: FRONTEND. `frontend/src/assets/reed/` (webp nuevos, se borran los `.jpg` y `.png` de
 > los personajes), `public/reed/` (nuevo, copias para la landing),
 > `frontend/src/components/reed/portraits.ts` (nuevo),

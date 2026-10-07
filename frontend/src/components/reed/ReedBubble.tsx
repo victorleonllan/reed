@@ -2,19 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ReedMode } from '../../types';
 import { useReed } from '../../context/ReedContext';
 import { Sun } from 'lucide-react';
-import sleeping from '../../assets/reed/sleeping.png';
-import companion from '../../assets/reed/companion.png';
-import teacher from '../../assets/reed/teacher.png';
-import librarian from '../../assets/reed/librarian.png';
-import reader from '../../assets/reed/reader.png';
+import { modeLabels } from './portraits';
+import { ReedCharacter } from './ReedCharacter';
 
-const modePortraits: Record<ReedMode, string> = {
-  sleeping,
-  companion,
-  teacher,
-  librarian,
-  reader,
+const modeDescriptions: Record<ReedMode, string> = {
+  sleeping: 'Reed no interviene, ni muestra resúmenes ni preguntas.',
+  companion: 'Un amigo que lee contigo, resume con calma y cuenta datos curiosos.',
+  teacher: 'Te ayuda a razonar con pistas socráticas y evalúa tu sesión.',
+  librarian: 'Te sugiere lecturas afines y responde dudas de tu biblioteca.',
+  reader: 'Muestra la barra de audio inferior y lee el texto sincronizado.',
 };
+
+const modeOrder: ReedMode[] = ['sleeping', 'companion', 'teacher', 'librarian', 'reader'];
 
 interface ReedBubbleProps {
   onOpenModeAction?: (actionType: string) => void;
@@ -51,43 +50,11 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const modeOptions: {
-    key: ReedMode;
-    label: string;
-    phrase: string;
-    desc: string;
-  }[] = [
-    {
-      key: 'sleeping',
-      label: 'Dormido',
-      phrase: 'Déjame solo',
-      desc: 'Reed no interviene, ni muestra resúmenes ni preguntas.',
-    },
-    {
-      key: 'companion',
-      label: 'Compañero',
-      phrase: 'Acompáñame',
-      desc: 'Un amigo que lee contigo, resume con calma y cuenta datos curiosos.',
-    },
-    {
-      key: 'teacher',
-      label: 'Profesor',
-      phrase: 'Enséñame',
-      desc: 'Te ayuda a razonar con pistas socráticas y evalúa tu sesión.',
-    },
-    {
-      key: 'librarian',
-      label: 'Bibliotecario',
-      phrase: 'Ayúdame con mis libros',
-      desc: 'Te sugiere lecturas afines y responde dudas de tu biblioteca.',
-    },
-    {
-      key: 'reader',
-      label: 'Lector',
-      phrase: 'Léemelo',
-      desc: 'Muestra la barra de audio inferior y lee el texto sincronizado.',
-    },
-  ];
+  const modeOptions = modeOrder.map((key) => ({
+    key,
+    ...modeLabels[key],
+    desc: modeDescriptions[key],
+  }));
 
   const currentModeInfo = modeOptions.find(m => m.key === mode);
 
@@ -96,14 +63,15 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         title={`Reed: ${currentModeInfo?.label || mode} («${currentModeInfo?.phrase}»). Clic para cambiar de modo.`}
-        className="relative h-14 w-14 rounded-full overflow-hidden bg-paper-raised flex items-end justify-center transition-all duration-states shadow-lg hover:brightness-110 active:scale-95"
+        className="group relative flex items-end justify-center rounded-full transition-transform duration-states focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
         aria-label="Menú de Reed"
       >
-        <img
-          src={modePortraits[mode]}
-          alt=""
-          className="h-[92%] w-auto object-contain"
+        {/* Subtle halo on hover/focus instead of a solid background. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,var(--color-reed-soft),transparent_70%)] opacity-0 transition-opacity duration-states group-hover:opacity-80 group-focus-visible:opacity-80 motion-reduce:transition-none"
         />
+        <ReedCharacter mode={mode} size="md" />
       </button>
 
       {isOpen && (
@@ -159,12 +127,8 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
                       : 'border-transparent hover:bg-paper text-ink'
                   }`}
                 >
-                  <span className="w-14 h-[4.5rem] rounded-[4px] overflow-hidden border border-line-strong bg-paper-raised flex items-end justify-center flex-shrink-0">
-                    <img
-                      src={modePortraits[opt.key]}
-                      alt=""
-                      className="h-[94%] w-auto object-contain"
-                    />
+                  <span className="flex w-14 flex-shrink-0 justify-center">
+                    <ReedCharacter mode={opt.key} size="sm" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <span className={`block font-bold text-sm ${isActive ? 'text-on-clay' : 'text-ink'}`}>

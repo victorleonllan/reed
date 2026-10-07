@@ -1,25 +1,13 @@
 import React from 'react';
-import { Book, Paragraph, ReedMode } from '../../types';
+import { Book, Paragraph } from '../../types';
 import { useReed } from '../../context/ReedContext';
 import { X } from 'lucide-react';
-import sleeping from '../../assets/reed/sleeping.png';
-import companion from '../../assets/reed/companion.png';
-import teacher from '../../assets/reed/teacher.png';
-import librarian from '../../assets/reed/librarian.png';
-import reader from '../../assets/reed/reader.png';
+import { ReedCharacter } from './ReedCharacter';
 import { SleepingMode } from './modes/SleepingMode';
 import { CompanionMode } from './modes/CompanionMode';
 import { TeacherMode } from './modes/TeacherMode';
 import { LibrarianMode } from './modes/LibrarianMode';
 import { ReaderMode } from './modes/ReaderMode';
-
-const modePortraits: Record<ReedMode, string> = {
-  sleeping,
-  companion,
-  teacher,
-  librarian,
-  reader,
-};
 
 interface ReedModePanelProps {
   book: Book;
@@ -48,16 +36,14 @@ export const ReedModePanel: React.FC<ReedModePanelProps> = ({
   const { mode } = useReed();
 
   if (mode === 'sleeping') {
-    return <SleepingMode portrait={modePortraits.sleeping} onClose={onClose} />;
+    return <SleepingMode onClose={onClose} />;
   }
 
   return (
     <div className="fixed z-40 bottom-[6.5rem] right-[max(0.75rem,calc(50vw-36rem))] w-[min(22rem,calc(100vw-2rem))] max-h-[min(26rem,calc(100dvh-9.5rem))] bg-paper-raised border border-line-strong rounded-lg shadow-2xl overflow-hidden animate-slideUp font-sans flex flex-col">
       <div className="p-3 bg-paper border-b border-line flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="w-12 h-16 rounded-[4px] overflow-hidden bg-paper border border-line-strong flex items-end justify-center flex-shrink-0">
-            <img src={modePortraits[mode]} alt="" className="h-[94%] w-auto object-contain" />
-          </span>
+          <ReedCharacter mode={mode} size="sm" />
           <span className="min-w-0 text-sm font-bold leading-snug text-ink">
             {mode === 'companion' && 'Modo Compañero · Leyendo contigo'}
             {mode === 'teacher' && 'Modo Profesor · Comprensión y guía'}

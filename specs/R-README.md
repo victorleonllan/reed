@@ -53,7 +53,7 @@ referencia, nunca se modifica).
 | R-001 | LÓGICA | Dependencias de toda la v2, `.env.example` y `src/config.ts` (planes, precios) | aplicado (07-oct-2026) |
 | R-002 | FRONTEND | `ReedModePanel` partido en un componente por modo (refactor) | aplicado (07-oct-2026) |
 | R-003 | FRONTEND | Sistema visual: tokens, tipografía, `Button`, `Surface`, `IconButton` | aplicado (07-oct) |
-| R-004 | FRONTEND | Personajes sin fondo ni marco: WebP, `ReedCharacter` | diseño |
+| R-004 | FRONTEND | Personajes sin fondo ni marco: WebP, `ReedCharacter` | aplicado (07-oct-2026) |
 | R-005 | LÓGICA | Landing en `/`, app en `/app`, layout de Next con las fuentes de Reed | aplicado |
 | R-006 | LÓGICA | Plan en la metadata de Clerk y límites de uso por plan | aplicado (07-oct) |
 | R-007 | FRONTEND | Biblioteca y almacén: portadas generadas, «sigue leyendo», subida | diseño |
