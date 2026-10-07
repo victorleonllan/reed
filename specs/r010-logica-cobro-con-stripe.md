@@ -1,6 +1,6 @@
 # Spec R-010 — Cobro de Reed Pro con Stripe (checkout, portal y webhook)
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `tsc --noEmit` (raíz) y `npm run lint` verdes; sin clave, checkout y portal → 503 en español; eventos firmados con `generateTestHeaderString` (script temporal, no commiteado) → `setPlan` correcto en los 4 eventos, reproceso idéntico, firma inválida → 400.
 > Capa: LOGICA. `src/lib/stripe.ts` (nuevo),
 > `src/app/api/stripe/create-checkout/route.ts` (nuevo),
 > `src/app/api/stripe/create-portal/route.ts` (nuevo),
