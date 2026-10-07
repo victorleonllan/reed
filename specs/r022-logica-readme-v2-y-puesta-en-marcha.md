@@ -1,6 +1,6 @@
 # Spec R-022 — README de la v2 y guía para poner en marcha el fork
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; las 30 variables de `.env.example` aparecen en la guía con su origen.
 > Capa: LOGICA. `README.md`, `backend/README.md`, `frontend/README.md`.
 > Depende de: R-001 … R-021 (documenta lo que quedó).
 
@@ -58,3 +58,14 @@ componentes nueva, `motion`, `react-hot-toast`, personajes en WebP y `ReedCharac
 ## Fuera de alcance
 
 Configurar las cuentas: lo hace Victor siguiendo la guía.
+
+## Bugs encontrados al aplicar (07-oct-2026)
+
+- **Orden de Neon y el catálogo.** El paso 2 pide `npm run db:seed-catalog` junto con la
+  migración, pero `scripts/seed-catalog.mts` crea un agente de ElevenLabs por libro y necesita
+  `ELEVENLABS_API_KEY` y `ELEVENLABS_AGENT_ID`, que llegan en el paso 4. En el README la
+  migración quedó en el paso 2 y el seed al final del paso 4.
+- **«Los tres `ELEVENLABS_*`».** `.env.example` tiene seis (`API_KEY`, `VOICE_ID`, `AGENT_ID`,
+  `TEXT_AGENT_ID`, `WEBHOOK_SECRET`, `TOOL_SECRET`). Manda el criterio 1: la guía cubre los seis.
+- **`README.md` raíz no estaba en la lista de archivos del lanzador** (solo `backend/` y
+  `frontend/`), pero el spec lo declara en su encabezado y es su archivo principal; se editó.

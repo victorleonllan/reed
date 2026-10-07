@@ -1,127 +1,243 @@
-# AI Reading Companion
+# Reed
 
-An app that reads **with** you: it reads text aloud and talks with you about what you are reading.
+> *«El amigo curioso que ya leyó el libro y te lo cuenta con calma.»*
 
-**Status:** live at https://reefai-app.vercel.app. Gael's **Reed** app (Vite + React, in `frontend/`) is the site; it talks to the Next.js API (`src/app/api/`) on the same domain. Signed-in users get their own library, uploads, ElevenLabs voice and Reed's AI answers; signed-out visitors see a demo with sample books.
+Reed lee **contigo**: te lee en voz alta, te resume, responde tus preguntas y conversa por voz
+sobre el pasaje que tienes enfrente.
 
-## Tech stack
+**Estado:** v2. Fork de [`Afaguayo/hackathon`](https://github.com/Afaguayo/hackathon) (2.º lugar
+en Innovathon 2.0) en [`victorleonllan/reed`](https://github.com/victorleonllan/reed). El fork
+todavía no tiene Vercel, base ni claves propias: el original vive en el Vercel y las cuentas de
+Angel. Para dejarlo en vivo, sigue [Poner en marcha el fork](#poner-en-marcha-el-fork).
 
-| Tech | What it does for us |
+## Estructura
+
+Un solo proyecto de Vercel sirve todo desde el mismo dominio:
+
+| Ruta | Qué es | Código |
+|---|---|---|
+| `/` | Landing (hero, modos, funciones, precios, FAQ) | `src/app/(marketing)/page.tsx`, `src/components/marketing/` |
+| `/blog`, `/blog/<slug>` | Blog estático con tres artículos | `src/app/(marketing)/blog/`, `src/lib/blog.ts` |
+| `/tos`, `/privacy-policy` | Términos y privacidad (borrador, falta revisión legal) | `src/app/(marketing)/` |
+| `/sitemap.xml`, `/robots.txt`, `/opengraph-image` | SEO | `src/app/sitemap.ts`, `robots.ts`, `opengraph-image.tsx`, `src/lib/seo.ts` |
+| `/app` | La app de Reed (Vite + React), compilada en `public/app/` | `frontend/` ([notas](frontend/README.md)) |
+| `/api/*` | La API (route handlers de Next) | `src/app/api/`, `src/lib/` ([notas](backend/README.md)) |
+
+Nombre, dominio, planes, precios y remitentes de correo salen de una sola fuente:
+`src/config.ts`.
+
+## Tecnologías
+
+| Tecnología | Para qué |
 |---|---|
-| **Vite + React 18 + Tailwind** (`frontend/`) | The Reed app users see; built into `public/app/` and served at `/` |
-| **Next.js** (App Router, TypeScript) | The API (`src/app/api/`) |
-| **Vercel** | Deployment (every push to `main` deploys; PRs get preview URLs) |
-| **ElevenLabs Text to Speech** | Read text aloud with a natural voice |
-| **ElevenLabs Agents + Knowledge Base** | Live voice conversation; each uploaded document gets its own agent that can search the whole document. A text-only agent answers explain / summarize / quiz |
-| **Neon Postgres + Drizzle ORM** | Documents, reading progress, conversations, notes |
-| **Clerk** | Sign-in; every API route (except ElevenLabs callbacks) requires a signed-in user |
-| n8n, Zavu | Not wired yet; add when needed |
+| **Next.js 16** (App Router, TypeScript) | Landing, blog, SEO y la API. `src/proxy.ts` es el antiguo middleware |
+| **Vite + React 18 + Tailwind** (`frontend/`) | La app en `/app`; se compila en `public/app/` |
+| **motion** | Transiciones: el junco entre modos, personajes que respiran, cambio de vista (respeta `prefers-reduced-motion`) |
+| **react-hot-toast** | Avisos breves dentro de la app |
+| **Vercel** | Deploy (cada push a la rama principal publica; los PR tienen URL de vista previa) |
+| **ElevenLabs Text to Speech** | Leer en voz alta |
+| **ElevenLabs Agents + Knowledge Base** | Conversación por voz (modo Compañero); cada documento subido tiene su agente con el libro entero. Un agente de solo texto responde explicar / resumir / test |
+| **Neon Postgres + Drizzle ORM** | Documentos, progreso, conversaciones, notas, uso |
+| **Clerk** | Inicio de sesión, y el plan del usuario (Gratis / Reed Pro) en `publicMetadata.reed` |
+| **Stripe** | Cobro de Reed Pro: checkout, portal de clientes y webhook que sincroniza el plan en Clerk |
+| **Resend** | Correos: bienvenida al crear la cuenta y aviso de Reed Pro activo. Sin clave se omiten sin error |
+| **PostHog** | Analítica en la landing y la app. Sin clave no se envía nada |
+| n8n, Zavu | Sin conectar todavía |
 
-## API (what the frontend calls via `frontend/src/services/api.ts`)
+## API (lo que llama la app desde `frontend/src/services/`)
 
-| Endpoint | Does | Returns |
+| Endpoint | Hace | Devuelve |
 |---|---|---|
-| `POST /api/documents` multipart `file`, `title?`, `author?` | Upload an EPUB/PDF/TXT/MD/HTML (max 4 MB): extract chapters + paragraphs, add the text to the ElevenLabs knowledge base, create its agent | `201 { document }` |
-| `GET /api/documents` | The user's documents (without text), newest first, each with `progress` | `{ documents }` |
-| `GET /api/documents/:id/content` | The book's text: `{ chapters: [{ number, title, paragraphs }] }` | `{ content }` |
-| `GET /api/documents/:id` | One document | `{ document }` |
-| `DELETE /api/documents/:id` | Delete it plus its ElevenLabs agent and knowledge-base file | `204` |
-| `GET /api/documents/:id/signed-url` | Voice session with **that document's** agent | `{ signedUrl }` |
-| `GET` / `PUT /api/documents/:id/progress` body `{ position, percent }` | Reading position | `{ progress }` |
-| `GET` / `POST /api/documents/:id/notes` body `{ text, quote?, type? }` | Notes, highlights, definitions | `{ notes }` / `201 { note }` |
-| `DELETE /api/documents/:id/notes/:noteId` | Delete a note | `204` |
-| `GET /api/documents/:id/conversations` | Past voice sessions with transcript + summary | `{ conversations }` |
-| `POST /api/webhooks/elevenlabs` | *Called by ElevenLabs* after each conversation (signed) | |
-| `POST /api/agent-tools/save-note` | *Called by the agent* mid-conversation (secret header) | `{ result }` |
-| `POST /api/tts` body `{ "text": "..." }` | ElevenLabs text to speech (max 2500 chars) | `audio/mpeg` |
-| `GET /api/companion/signed-url` | Session with the general companion agent (no document) | `{ signedUrl }` |
-| `POST /api/ai/explain` body `{ paragraph, question }` | Reed explains a passage | `{ explanation }` |
-| `POST /api/ai/summarize` body `{ title, text }` | Chapter summary | `{ summary }` |
-| `POST /api/ai/quiz` body `{ title, text }` | 3–5 multiple-choice questions | `{ questions }` |
-| `GET /api/usage` | The user's usage in the last 24h vs. limits | `{ usage }` |
+| `POST /api/documents` multipart `file`, `title?`, `author?` | Sube EPUB/PDF/TXT/MD/HTML (máx. 4 MB): extrae capítulos y párrafos, agrega el texto a la knowledge base de ElevenLabs y crea su agente | `201 { document }` |
+| `GET /api/documents` | Documentos del usuario (sin texto), más recientes primero, cada uno con `progress` | `{ documents }` |
+| `GET /api/documents/:id/content` | El texto: `{ chapters: [{ number, title, paragraphs }] }` | `{ content }` |
+| `GET /api/documents/:id` | Un documento | `{ document }` |
+| `DELETE /api/documents/:id` | Lo borra junto con su agente y su archivo en ElevenLabs | `204` |
+| `GET /api/documents/:id/signed-url` | Sesión de voz con el agente **de ese documento** | `{ signedUrl }` |
+| `GET` / `PUT /api/documents/:id/progress` body `{ position, percent }` | Dónde quedaste | `{ progress }` |
+| `GET` / `POST /api/documents/:id/notes` body `{ text, quote?, type? }` | Notas, subrayados, definiciones | `{ notes }` / `201 { note }` |
+| `DELETE /api/documents/:id/notes/:noteId` | Borra una nota | `204` |
+| `GET /api/documents/:id/conversations` | Conversaciones de voz pasadas con transcripción y resumen | `{ conversations }` |
+| `POST /api/tts` body `{ "text": "..." }` | Texto a voz con ElevenLabs (máx. 2500 caracteres) | `audio/mpeg` |
+| `GET /api/companion/signed-url` | Sesión con el agente general (sin documento) | `{ signedUrl }` |
+| `POST /api/ai/explain` body `{ paragraph, question }` | Reed explica un pasaje | `{ explanation }` |
+| `POST /api/ai/summarize` body `{ title, text }` | Resumen del capítulo | `{ summary }` |
+| `POST /api/ai/quiz` body `{ title, text }` | 3–5 preguntas de opción múltiple | `{ questions }` |
+| `GET /api/usage` | Uso de las últimas 24 h contra los límites del plan, y el plan | `{ usage, plan: { plan, status, renewsAt } }` |
+| `POST /api/stripe/create-checkout` body `{ interval: "month" \| "year" }` | Checkout de Stripe para Reed Pro (`409` si ya es Pro) | `{ url }` |
+| `POST /api/stripe/create-portal` | Portal de clientes de Stripe: tarjeta, cancelar (`404` sin suscripción) | `{ url }` |
+| `POST /api/webhooks/stripe` | *Lo llama Stripe* (firmado): mantiene el plan en Clerk al día | |
+| `POST /api/webhooks/clerk` | *Lo llama Clerk* (firmado) en `user.created`: correo de bienvenida | |
+| `POST /api/webhooks/elevenlabs` | *Lo llama ElevenLabs* tras cada conversación (firmado): guarda la transcripción | |
+| `POST /api/agent-tools/save-note` | *Lo llama el agente* durante la conversación (header secreto) | `{ result }` |
 
-**Auth:** send `Authorization: Bearer <Clerk session token>` (the frontend does this in `services/api.ts`).
+**Auth:** `Authorization: Bearer <token de sesión de Clerk>` (la app lo agrega en
+`services/api.ts`). Los webhooks y la herramienta del agente no usan Clerk: validan su propia
+firma o secreto.
 
-**Usage limits** (rolling 24h, per user / whole app): read aloud 5,000 / 20,000 characters, uploads 10 / 100, voice sessions 30 / 300, Reed AI answers 100 / 1,000. Change them with the `LIMIT_*` env vars in `.env.example`.
+**Planes y límites** (ventana móvil de 24 h, por usuario; definidos en `src/config.ts`):
 
-Errors come back as `{ "error": "..." }` (400 bad input, 401 signed out, 404 not found, 409 document not ready, 413 too large, 415 wrong file type, 422 unreadable file, 429 usage limit, 502 ElevenLabs failed). The ElevenLabs key stays on the server (`src/lib/elevenlabs.ts`); the browser never sees it.
+| | Voz (caracteres) | Subidas | Sesiones de voz | Respuestas de Reed |
+|---|---|---|---|---|
+| Gratis | 5 000 | 10 | 30 | 100 |
+| Reed Pro (MXN 99/mes o 990/año) | 20 000 | 30 | 60 | 500 |
 
-Live voice conversation isn't in the frontend yet. To add it: `@elevenlabs/react` (wrap in `<ConversationProvider>`, then `useConversation().startSession({ signedUrl, dynamicVariables: { passage, book_title } })` with the URL from `/api/documents/:id/signed-url`).
+El plan Gratis además comparte un tope global para toda la app (20 000 / 100 / 300 / 1 000) que
+protege la cuota de ElevenLabs; Reed Pro no lo cuenta. Las variables `LIMIT_*` de `.env.example`
+cambian el tope global y los límites por usuario **del plan Gratis**. Un Pro con el pago atrasado
+(`past_due`) sigue siendo Pro mientras Stripe reintenta el cobro.
 
-## Demo catalog (books every user gets)
+Errores: `{ "error": "..." }` (400 dato inválido, 401 sin sesión, 404 no existe, 409 documento no
+listo o ya eres Pro, 413 muy grande, 415 tipo de archivo, 422 archivo ilegible, 429 límite de
+uso, 502 falló ElevenLabs, 503 servicio sin configurar). La clave de ElevenLabs y los ids de
+Stripe se quedan en el servidor.
 
-Five public-domain educational books in Spanish are in the database as **catalog books**: every signed-in user sees them in their library, can read, listen, ask Reed, get summaries and quizzes, and keeps their own progress and notes. Nobody can delete them.
+## Catálogo de muestra (libros que todo usuario tiene)
 
-| Book | Author | Shows off |
+Cinco libros educativos de dominio público, en español, están en la base como **libros de
+catálogo**: todo usuario con sesión los ve en el almacén, puede leerlos, escucharlos, preguntarle
+a Reed, pedir resúmenes y tests, y guarda su propio progreso y notas. Nadie puede borrarlos.
+
+| Libro | Autor | Muestra |
 |---|---|---|
-| *Reglas y consejos sobre investigación científica* | Santiago Ramón y Cajal | Learning how scientists think |
-| *La Montaña* | Élisée Reclus | Earth science explained |
-| *El Mar* | Jules Michelet | Natural history of the ocean |
-| *El Hombre Mediocre* | José Ingenieros | Psychology/ethics; debating with Reed |
-| *Ariel* | José Enrique Rodó | Education and culture essay |
+| *Reglas y consejos sobre investigación científica* | Santiago Ramón y Cajal | Cómo piensa un científico |
+| *La Montaña* | Élisée Reclus | Ciencias de la Tierra explicadas |
+| *El Mar* | Jules Michelet | Historia natural del océano |
+| *El Hombre Mediocre* | José Ingenieros | Psicología y ética; debatir con Reed |
+| *Ariel* | José Enrique Rodó | Ensayo sobre educación y cultura |
 
-Source: Project Gutenberg EPUBs (public domain); the seed strips Gutenberg's header, license pages and trademark mentions. To add or restore books, edit `CATALOG` in `scripts/seed-catalog.mts` and run `npm run db:seed-catalog` (safe to re-run; `-- --dry-run` previews). Catalog books are rows with `is_public = true`, owned by `catalog`.
+Fuente: EPUB de Project Gutenberg; el seed quita la cabecera, la licencia y las menciones de
+marca de Gutenberg. Para agregar o restaurar libros, edita `CATALOG` en
+`scripts/seed-catalog.mts` y corre `npm run db:seed-catalog` (se puede repetir sin duplicar;
+`-- --dry-run` muestra qué haría). Son filas con `is_public = true` y dueño `catalog`.
 
-## Where the code lives and who owns it
+## Poner en marcha el fork
 
-| Area | Files | Owner |
-|---|---|---|
-| Backend / API | `src/app/api/`, `src/lib/`, `src/db/`, `drizzle/` | Emmanuel ([notes](backend/README.md)) |
-| Frontend / UI | `frontend/` (Vite app) | Gael ([notas](frontend/README.md)) |
-| AI / ElevenLabs agent | Agent prompt + voice in the ElevenLabs dashboard, `src/lib/elevenlabs.ts` together with Emmanuel | Victor ([notas](ai-agents/README.md)) |
+En este orden. Cada paso dice dónde se obtiene el valor y qué variable de `.env.example` llena.
+Las variables van en Vercel → **Settings → Environment Variables** (Production y Preview) y, para
+trabajar en local, en `.env.local` (raíz) y `frontend/.env.local`. Las `VITE_*` se leen **al
+compilar**: después de agregarlas o cambiarlas hay que volver a desplegar.
 
-Owners are a starting suggestion; swap if someone prefers another part.
+1. **Vercel.** vercel.com → **Add New… → Project** → importar `victorleonllan/reed`. Framework
+   **Next.js**, raíz `/`, comandos por defecto: `npm run build` compila la app de Vite en
+   `public/app/` y luego Next.
+2. **Neon (base de datos).** En el proyecto de Vercel → **Storage → Create → Neon** → conectar.
+   Vercel agrega `DATABASE_URL` y `DATABASE_URL_UNPOOLED` (la conexión directa que usan las
+   migraciones). Bájalas a local (`vercel env pull .env.local`, o cópialas a mano) y crea las
+   tablas una vez:
+   ```bash
+   npm run db:migrate
+   ```
+   El catálogo (`npm run db:seed-catalog`) se carga al final del paso 4, porque crea un agente de
+   ElevenLabs por libro y necesita sus claves.
+3. **Clerk (sesión).** dashboard.clerk.com → app nueva.
+   - **API Keys** (Next.js) → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` y `CLERK_SECRET_KEY`. La
+     misma clave pública va también en `VITE_CLERK_PUBLISHABLE_KEY` (la app de Vite la necesita
+     al compilar; sin ella, `/app` solo muestra un aviso pidiéndola).
+   - **Domains**: agrega el dominio de Vercel (y el definitivo cuando exista) como dominio
+     permitido. La app usa el inicio de sesión de Clerk embebido en `/app` y vuelve a `/` al
+     cerrar sesión.
+   - **Webhooks** → endpoint `https://<dominio>/api/webhooks/clerk`, evento `user.created` →
+     su *signing secret* en `CLERK_WEBHOOK_SIGNING_SECRET`. Sin él no sale el correo de
+     bienvenida.
+   - Para producción hace falta una instancia de producción de Clerk (claves `pk_live_` /
+     `sk_live_`), que pide dominio propio.
+4. **ElevenLabs (voz e IA).** Agentes y prompts según [`ai-agents/README.md`](ai-agents/README.md)
+   y [`ai-agents/reading-companion-agent.md`](ai-agents/reading-companion-agent.md); los pasos del
+   webhook y de la herramienta `save_note` están en
+   [`backend/README.md`](backend/README.md#hooking-up-elevenlabs).
+   - **Developers → API Keys** (permisos de Text to Speech y Agents) → `ELEVENLABS_API_KEY`.
+   - **Voices** → la voz de «Léemelo» → su Voice ID en `ELEVENLABS_VOICE_ID`.
+   - **Agents** → el agente de lectura (privado, con autenticación) → `ELEVENLABS_AGENT_ID`. Es
+     también la plantilla que se copia para cada documento subido.
+   - **Agents** → un agente de solo texto para `/api/ai/*` (privado, con *overrides* de prompt,
+     primer mensaje y `text_only` permitidos en Security) → `ELEVENLABS_TEXT_AGENT_ID`.
+   - **Agents → Settings → Post-call webhook** → `https://<dominio>/api/webhooks/elevenlabs`,
+     evento de transcripción → su secreto en `ELEVENLABS_WEBHOOK_SECRET`. Sin él no se guardan
+     las transcripciones.
+   - `ELEVENLABS_TOOL_SECRET`: invéntalo (`openssl rand -hex 32`) y ponlo también como header
+     `x-agent-tool-secret` de la herramienta `save_note` del agente.
+   - Con las claves en `.env.local`, carga el catálogo una vez: `npm run db:seed-catalog`.
+   - Opcional, sin cuenta que crear: los topes del plan Gratis, si quieres moverlos de sus
+     valores por defecto (`.env.example`). Por usuario: `LIMIT_TTS_CHARS_PER_USER`,
+     `LIMIT_UPLOADS_PER_USER`, `LIMIT_SESSIONS_PER_USER`, `LIMIT_AI_PER_USER`. Globales:
+     `LIMIT_TTS_CHARS_GLOBAL`, `LIMIT_UPLOADS_GLOBAL`, `LIMIT_SESSIONS_GLOBAL`,
+     `LIMIT_AI_GLOBAL`.
+5. **Stripe (cobro), primero en modo prueba.**
+   - **Product catalog** → producto «Reed Pro» con dos precios recurrentes: MXN 99 mensual y
+     MXN 990 anual → sus ids `price_…` en `STRIPE_PRICE_PRO_MONTHLY` y
+     `STRIPE_PRICE_PRO_YEARLY`.
+   - **Developers → API keys** → la *secret key* en `STRIPE_SECRET_KEY`.
+   - **Developers → Webhooks** → endpoint `https://<dominio>/api/webhooks/stripe` con los eventos
+     `checkout.session.completed`, `customer.subscription.updated`,
+     `customer.subscription.deleted` e `invoice.payment_failed` → su *signing secret* en
+     `STRIPE_WEBHOOK_SECRET`.
+   - **Settings → Billing → Customer portal** → activarlo (cambiar tarjeta y cancelar).
+   - Sin `STRIPE_SECRET_KEY` o sin los precios, el pago responde «Los pagos todavía no están
+     activos.» y el plan Gratis funciona igual. Para cobrar de verdad, repite el paso con las
+     claves de modo real.
+6. **Resend (correos).** resend.com → **Domains** → verificar el dominio de envío → **API Keys**
+   → `RESEND_API_KEY`. Cambia los remitentes (`resend.fromNoReply`, `resend.fromAdmin`) y
+   `supportEmail` en `src/config.ts`: hoy son el placeholder `@reed.app`.
+7. **PostHog (analítica).** posthog.com → proyecto nuevo → **Project settings** → *Project API
+   key* en `NEXT_PUBLIC_POSTHOG_KEY` (landing) y `VITE_POSTHOG_KEY` (app). Si el proyecto está
+   en la región de la UE, cambia `NEXT_PUBLIC_POSTHOG_HOST` y `VITE_POSTHOG_HOST` (por defecto
+   `https://us.i.posthog.com`).
+8. **Dominio.** `NEXT_PUBLIC_SITE_URL` con el dominio final, sin barra al final (lo usan el SEO,
+   las URL de vuelta de Stripe y los enlaces de los correos). Al cambiar de dominio, actualiza
+   también las URL de los webhooks de Clerk, Stripe y ElevenLabs.
 
-## Run it locally
+Lo que queda por verificar con la app corriendo está en
+[`specs/R-PENDIENTES.md`](specs/R-PENDIENTES.md).
 
-Needs Node.js 20+.
+## Correr en local
+
+Necesita Node.js 20+.
 
 ```bash
-git clone https://github.com/Afaguayo/hackathon.git
-cd hackathon
+git clone https://github.com/victorleonllan/reed.git
+cd reed
 npm install
-cp .env.example .env.local   # then fill in the values (ask Angel privately)
-npm run db:migrate           # create/update the database tables
-npm run dev                  # API on http://localhost:3000
+cp .env.example .env.local   # y llena los valores (guía de arriba)
+npm run db:migrate           # crea o actualiza las tablas
+npm run dev                  # landing y API en http://localhost:3000
 
-# second terminal: the Reed app
+# segunda terminal: la app de Reed
 cd frontend && npm install
-echo "VITE_CLERK_PUBLISHABLE_KEY=pk_test_..." > .env.local
-npm run dev                  # http://localhost:5173 (proxies /api to :3000)
+echo "VITE_CLERK_PUBLISHABLE_KEY=pk_test_..." > .env.local   # opcional: VITE_POSTHOG_KEY
+npm run dev                  # http://localhost:5173 (reenvía /api a :3000)
 ```
 
-`npm run build` in the root builds both, exactly like Vercel does (frontend into `public/app/`, then Next).
+`npm run build` en la raíz compila las dos, igual que Vercel (la app en `public/app/`, luego
+Next).
 
-Without the keys the API routes return an error naming the missing variable.
+Sin claves todo compila y degrada con un mensaje claro: las rutas de ElevenLabs y de la base
+responden con el nombre de la variable que falta, el pago responde 503, los correos se omiten y
+la analítica no se carga.
 
-Quick test once the keys are in:
-```bash
-curl -X POST localhost:3000/api/tts -H 'Content-Type: application/json' -d '{"text":"Hello"}' -o hello.mp3
-curl -F file=@book.pdf -F title="My book" localhost:3000/api/documents
-curl localhost:3000/api/documents
-```
+Scripts de base: `npm run db:generate` (tras editar `src/db/schema.ts`, escribe una migración en
+`drizzle/`), `npm run db:migrate` (aplica migraciones), `npm run db:studio` (ver los datos).
 
-Database scripts: `npm run db:generate` (after editing `src/db/schema.ts`, writes a migration to `drizzle/`), `npm run db:migrate` (applies migrations), `npm run db:studio` (browse the data).
+## Cómo trabajamos
 
-## ElevenLabs setup
+- Todo cambio sale de un spec en [`specs/`](specs/). El índice vivo es
+  [`specs/R-README.md`](specs/R-README.md); lo pendiente, `specs/R-PENDIENTES.md`.
+- Un spec = un commit, con el prefijo del spec: `feat(spec-R0NN): …`.
+- El remoto `upstream` (el repo de Angel, `Afaguayo/hackathon`) está bloqueado para push; se
+  trabaja y se sube solo a `origin` (`victorleonllan/reed`).
+- Nunca se commitean claves: `.env.local` está en `.gitignore`; las variables nuevas se
+  documentan en `.env.example`.
 
-Already done on Angel's ElevenLabs account: the API key, the voice (Sarah) and a private **Reading Companion** agent. The agent's prompt and settings are in [ai-agents/reading-companion-agent.md](ai-agents/reading-companion-agent.md).
+## Origen
 
-To get the three `ELEVENLABS_*` values for your `.env.local`, ask Angel privately. Never put them in the repo or in public chats.
+Reed nació en Innovathon 2.0 como *AI Reading Companion*, con el deploy en
+https://reefai-app.vercel.app (Vercel `reading-companion`, equipo REEF, cuentas de Angel). Allí
+sacó el 2.º lugar. Así se repartió el trabajo en el hackathon:
 
-## Deploy on Vercel
+| Área | Archivos | Responsable |
+|---|---|---|
+| Backend / API | `src/app/api/`, `src/lib/`, `src/db/`, `drizzle/` | Emmanuel ([notas](backend/README.md)) |
+| Frontend / UI | `frontend/` (app de Vite) | Gael ([notas](frontend/README.md)) |
+| IA / agente de ElevenLabs | Prompt y voz en ElevenLabs, `src/lib/elevenlabs.ts` con Emmanuel | Victor ([notas](ai-agents/README.md)) |
 
-**Live:** https://reefai-app.vercel.app (Vercel project `reading-companion`, team REEF). Connected to GitHub: every push to `main` deploys to production; other branches and PRs get protected preview URLs. Env vars are already set in the project.
-
-To set it up from scratch:
-
-1. vercel.com → **Add New… → Project** → import `Afaguayo/Hackathon` (framework: Next.js, root: `/`, defaults are fine).
-2. **Settings → Environment Variables**: add the three `ELEVENLABS_*` values (Production + Preview).
-3. **Storage → Create → Neon**: connect a database; Vercel adds `DATABASE_URL` for you. Run `npm run db:migrate` against it once (with its `DATABASE_URL` in your `.env`).
-4. Deploy. From then on, every push to `main` redeploys and every PR gets a preview URL.
-
-## Team rules
-- Work on a branch and open a pull request; merge to `main` when it works.
-- `git pull` before you start; commit and push often.
-- Stay in your own files where possible; for shared files (`package.json`, this README) say it in chat first.
-- Never commit API keys. `.env.local` is git-ignored; use `.env.example` to document new variables.
+La v2 (este fork) la sigue Victor.
