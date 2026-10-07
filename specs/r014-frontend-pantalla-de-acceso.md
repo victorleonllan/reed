@@ -1,6 +1,6 @@
 # Spec R-014 — Pantalla de acceso con los personajes de Reed
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `tsc --noEmit` (raíz y `frontend`) y `npm run lint` verdes; render en navegador pendiente (sin servidor, por regla de la tanda).
 > Capa: FRONTEND. `frontend/src/components/auth/AuthScreen.tsx`.
 > Depende de: R-003 (componentes base), R-004 (`ReedCharacter`), R-008 (prop `animated`).
 
