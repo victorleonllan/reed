@@ -1,6 +1,6 @@
 # Spec R-018 — Blog de Reed con tres artículos
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; tres artículos de 588-606 palabras; `/blog` y `/blog/<slug>` sin probar en ejecución (la cadena no levanta servidores).
 > Capa: FRONTEND. `src/lib/blog.ts` (nuevo), `src/app/(marketing)/blog/page.tsx` (nuevo),
 > `src/app/(marketing)/blog/[slug]/page.tsx` (nuevo),
 > `src/components/marketing/ArticleCard.tsx` (nuevo).

@@ -67,7 +67,7 @@ referencia, nunca se modifica).
 | R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | aplicado (07-oct-2026) |
 | R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | aplicado (07-oct-2026) |
 | R-017 | FRONTEND | Términos, privacidad, SEO (sitemap, robots, OG) y páginas de error | aplicado (07-oct-2026) |
-| R-018 | FRONTEND | Blog estático con tres artículos | diseño |
+| R-018 | FRONTEND | Blog estático con tres artículos | aplicado (07-oct-2026) |
 | R-019 | FRONTEND | Plan, uso y pago dentro de la app; modal al llegar al límite | aplicado (07-oct) |
 | R-020 | FRONTEND | Bienvenida: Reed presenta sus cinco modos | aplicado (07-oct-2026) |
 | R-021 | FRONTEND | Analítica con PostHog (landing y app) | aplicado (07-oct-2026) |
