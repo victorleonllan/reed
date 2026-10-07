@@ -1,6 +1,6 @@
 # Spec R-024 — El hero de la landing con Reed de cuerpo completo y sin la línea del junco
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — tsc y lint verdes; sin `<svg>` en `Hero.tsx`; `sizes` ajustado al ancho real del personaje entero (180 px / 140 px). Revisión visual en móvil y escritorio pendiente (V2).
 > Capa: FRONTEND. `src/components/marketing/Hero.tsx`, `public/reed/full-body/companion.webp`
 > (nuevo).
 > Modifica: R-012 (punto 2, el hero). Sigue la línea de R-023.

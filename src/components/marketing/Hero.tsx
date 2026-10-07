@@ -36,33 +36,17 @@ export function Hero() {
         </div>
 
         <div className="relative mx-auto flex h-80 w-full max-w-sm items-end justify-center sm:h-[26rem]">
-          {/* The reed: a thin, slightly bent stem behind the character. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 40 400"
-            preserveAspectRatio="none"
-            className="absolute bottom-[4%] left-[58%] h-[92%] w-8 text-reed opacity-40"
-          >
-            <path
-              d="M20 400 C 18 300, 26 200, 22 110 S 12 30, 30 0"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
           <span
             aria-hidden="true"
             className="absolute bottom-0 left-1/2 h-[7%] w-[60%] -translate-x-1/2 translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(64,46,24,0.28),transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(236,230,216,0.18),transparent_70%)]"
           />
           <Image
-            src="/reed/companion.webp"
-            alt="Reed en modo compañero: una cabecita redonda con dos hojas y un tallo de junco, que sonríe y mira de reojo"
-            width={518}
-            height={640}
+            src="/reed/full-body/companion.webp"
+            alt="Reed en modo compañero, de cuerpo completo: cabeza redonda con hojas, chaleco tejido y bolso cruzado, que sonríe y saluda con la mano"
+            width={379}
+            height={880}
             preload
-            sizes="(min-width: 640px) 340px, 260px"
+            sizes="(min-width: 640px) 180px, 140px"
             className="relative h-full w-auto object-contain [filter:drop-shadow(0_2px_3px_rgba(64,46,24,0.18))] dark:[filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.45))]"
           />
         </div>
