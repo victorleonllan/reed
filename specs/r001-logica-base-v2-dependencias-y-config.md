@@ -1,6 +1,6 @@
 # Spec R-001 — Base de la v2: dependencias, variables de entorno y config central
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npm ls` de los 8 paquetes sin error, `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde.
 > Capa: LOGICA. `package.json`, `package-lock.json`, `frontend/package.json`,
 > `frontend/package-lock.json`, `.env.example`, `src/config.ts` (nuevo).
 > Depende de: nada. Todos los demás specs de la v2 parten de este.
