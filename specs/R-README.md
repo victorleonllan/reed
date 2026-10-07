@@ -72,6 +72,7 @@ referencia, nunca se modifica).
 | R-020 | FRONTEND | Bienvenida: Reed presenta sus cinco modos | aplicado (07-oct-2026) |
 | R-021 | FRONTEND | Analítica con PostHog (landing y app) | aplicado (07-oct-2026) |
 | R-022 | LÓGICA | README de la v2 y guía para poner en marcha el fork | aplicado (07-oct-2026) |
+| R-023 | FRONTEND | Transición entre modos sin la línea del junco (modifica R-008) | diseño |
 
 ## Cadena de ejecución (herdr)
 
