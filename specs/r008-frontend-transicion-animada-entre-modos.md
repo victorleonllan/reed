@@ -1,6 +1,6 @@
 # Spec R-008 — Transición animada entre modos y personajes vivos
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026) — `npx tsc --noEmit` y `npm run lint` verdes; `tsc -p frontend` sin errores en los cuatro archivos de R-008 (el único error abierto es de `modes/TeacherMode.tsx`, en curso por R-009). Animación sin ver en navegador: pendiente de verificación visual.
 > Capa: FRONTEND. `frontend/src/components/reed/ReedCharacter.tsx`,
 > `frontend/src/components/reed/ReedBubble.tsx`, `frontend/src/components/reed/ReedModePanel.tsx`,
 > `frontend/src/components/reed/modeTheme.ts` (nuevo).

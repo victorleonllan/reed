@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ReedMode } from '../../types';
 import { useReed } from '../../context/ReedContext';
 import { Sun } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react';
 import { modeLabels } from './portraits';
 import { ReedCharacter } from './ReedCharacter';
+import { modeAccent } from './modeTheme';
 
 const modeDescriptions: Record<ReedMode, string> = {
   sleeping: 'Reed no interviene, ni muestra resúmenes ni preguntas.',
@@ -14,6 +16,30 @@ const modeDescriptions: Record<ReedMode, string> = {
 };
 
 const modeOrder: ReedMode[] = ['sleeping', 'companion', 'teacher', 'librarian', 'reader'];
+
+// Menu grows from the button's corner; options follow 30 ms apart.
+const menuVariants: Variants = {
+  closed: { opacity: 0, scale: 0.96, transition: { duration: 0.12, ease: 'easeIn' } },
+  open: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.18, ease: 'easeOut', staggerChildren: 0.03 },
+  },
+};
+const optionVariants: Variants = {
+  closed: { opacity: 0, y: 4 },
+  open: { opacity: 1, y: 0, transition: { duration: 0.16, ease: 'easeOut' } },
+};
+
+// Reduced motion: plain 120 ms fades, no scale or stagger.
+const menuFadeVariants: Variants = {
+  closed: { opacity: 0, transition: { duration: 0.12 } },
+  open: { opacity: 1, transition: { duration: 0.12 } },
+};
+const optionFadeVariants: Variants = {
+  closed: { opacity: 1 },
+  open: { opacity: 1 },
+};
 
 interface ReedBubbleProps {
   onOpenModeAction?: (actionType: string) => void;
@@ -29,6 +55,7 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
   className = '',
 }) => {
   const { mode, setMode } = useReed();
+  const reduceMotion = useReducedMotion() ?? false;
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = menuOpen ?? internalOpen;
   const setIsOpen = (open: boolean) => {
@@ -66,16 +93,25 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
         className="group relative flex items-end justify-center rounded-full transition-transform duration-states focus:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
         aria-label="Menú de Reed"
       >
-        {/* Subtle halo on hover/focus instead of a solid background. */}
+        {/* Soft halo in the mode's accent; it shifts color with the mode and brightens on hover/focus. */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,var(--color-reed-soft),transparent_70%)] opacity-0 transition-opacity duration-states group-hover:opacity-80 group-focus-visible:opacity-80 motion-reduce:transition-none"
+          style={{ backgroundColor: modeAccent[mode].color }}
+          className="pointer-events-none absolute inset-2 rounded-full opacity-15 blur-xl transition-[background-color,opacity] duration-panels group-hover:opacity-35 group-focus-visible:opacity-35 motion-reduce:transition-none"
         />
-        <ReedCharacter mode={mode} size="md" />
+        <ReedCharacter mode={mode} size="md" animated />
       </button>
 
+      <AnimatePresence>
       {isOpen && (
-        <div className="fixed z-50 bottom-[6.5rem] right-[max(0.75rem,calc(50vw-36rem))] w-[min(20rem,calc(100vw-2rem))] max-h-[min(24rem,calc(100dvh-9.5rem))] overflow-x-hidden overflow-y-auto bg-paper-raised border border-line-strong shadow-2xl rounded-lg p-3.5 animate-slideUp font-sans">
+        <motion.div
+          variants={reduceMotion ? menuFadeVariants : menuVariants}
+          initial="closed"
+          animate="open"
+          exit="closed"
+          style={{ originX: 1, originY: 1 }}
+          className="fixed z-50 bottom-[6.5rem] right-[max(0.75rem,calc(50vw-36rem))] w-[min(20rem,calc(100vw-2rem))] max-h-[min(24rem,calc(100dvh-9.5rem))] overflow-x-hidden overflow-y-auto bg-paper-raised border border-line-strong shadow-2xl rounded-lg p-3.5 font-sans"
+        >
           <div className="pb-2.5 mb-2.5 border-b border-line">
             <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block font-sans">
               Acompañamiento
@@ -111,8 +147,9 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
             {modeOptions.map((opt) => {
               const isActive = mode === opt.key;
               return (
-                <button
+                <motion.button
                   key={opt.key}
+                  variants={reduceMotion ? optionFadeVariants : optionVariants}
                   title={opt.desc}
                   onClick={() => {
                     setMode(opt.key);
@@ -121,7 +158,7 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
                       onOpenModeAction(opt.key);
                     }
                   }}
-                  className={`w-full text-left p-2 rounded-md transition-all duration-states flex items-center gap-3 border ${
+                  className={`w-full text-left p-2 rounded-md transition-colors duration-states flex items-center gap-3 border ${
                     isActive
                       ? 'bg-clay border-clay-strong text-on-clay shadow-sm'
                       : 'border-transparent hover:bg-paper text-ink'
@@ -141,7 +178,7 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
                       {opt.desc}
                     </p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -151,8 +188,9 @@ export const ReedBubble: React.FC<ReedBubbleProps> = ({
               ? 'El audio está activo en modo Lector.'
               : 'El audio aparece solo en modo Lector.'}
           </p>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };
