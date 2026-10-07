@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { ReedMode, ReadingSessionStats } from '../types';
+import { identify, reset, track } from '../lib/analytics';
+import { useAccount } from './AccountContext';
 
 interface ReadingHabits {
   averageReadingSpeedWpm: number;
@@ -41,7 +43,19 @@ export const ReedProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [sessionStats, setSessionStats] = useState<ReadingSessionStats>(defaultSessionStats);
 
+  // Analytics identity: only the Clerk user id (never email or name); reset on sign-out.
+  const { user, clerkEnabled } = useAccount();
+  const userId = clerkEnabled ? user?.id ?? null : null;
+  const identifiedId = useRef<string | null>(null);
+  useEffect(() => {
+    if (userId === identifiedId.current) return;
+    if (userId) identify(userId);
+    else reset();
+    identifiedId.current = userId;
+  }, [userId]);
+
   const setMode = (newMode: ReedMode) => {
+    if (newMode !== mode) track('mode_changed', { from: mode, to: newMode });
     setModeState(newMode);
     localStorage.setItem('reed-active-mode', newMode);
   };

@@ -1,6 +1,6 @@
 # Spec R-021 — Analítica con PostHog en la landing y en la app
 
-> Estado: diseño (07-oct-2026).
+> Estado: aplicado (07-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; sin build ni servidor (reglas de la tanda). `identify` con el id de Clerk desde `ReedContext` vía `useAccount()`, sin tocar otros archivos.
 > Capa: FRONTEND. `src/components/marketing/Analytics.tsx` (nuevo),
 > `src/app/(marketing)/layout.tsx`, `frontend/src/lib/analytics.ts` (nuevo),
 > `frontend/src/main.tsx`, `frontend/src/context/ReedContext.tsx`,

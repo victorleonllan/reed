@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast';
 import { ApiError, apiFetch } from './api';
+import { track } from '../lib/analytics';
 
 // ---------- types (mirror GET /api/usage) ----------
 
@@ -76,6 +77,12 @@ async function goToStripe(path: string, body?: unknown): Promise<boolean> {
   }
 }
 
-export const startCheckout = (interval: BillingInterval) => goToStripe('/api/stripe/create-checkout', { interval });
+export function startCheckout(interval: BillingInterval) {
+  track('checkout_started', { interval });
+  return goToStripe('/api/stripe/create-checkout', { interval });
+}
 
-export const openPortal = () => goToStripe('/api/stripe/create-portal');
+export function openPortal() {
+  track('portal_opened');
+  return goToStripe('/api/stripe/create-portal');
+}
