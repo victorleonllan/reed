@@ -64,7 +64,7 @@ referencia, nunca se modifica).
 | R-012 | FRONTEND | Landing: hero, problema, modos, funciones, precios, FAQ | aplicado (07-oct-2026) |
 | R-013 | FRONTEND | Encabezado, navegación móvil, transición entre vistas, avisos | aplicado (07-oct-2026) |
 | R-014 | FRONTEND | Pantalla de acceso con los personajes | aplicado (07-oct-2026) |
-| R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | aplicado (07-oct-2026) |
+| R-015 | FRONTEND | Hablar con Reed por voz (ElevenLabs) desde el modo Compañero | superado por R-026 (10-oct-2026) |
 | R-016 | LÓGICA | Correos con Resend: bienvenida y Reed Pro | aplicado (07-oct-2026) |
 | R-017 | FRONTEND | Términos, privacidad, SEO (sitemap, robots, OG) y páginas de error | aplicado (07-oct-2026) |
 | R-018 | FRONTEND | Blog estático con tres artículos | aplicado (07-oct-2026) |
@@ -75,6 +75,7 @@ referencia, nunca se modifica).
 | R-023 | FRONTEND | Transición entre modos sin la línea del junco (modifica R-008) | aplicado (07-oct-2026) |
 | R-024 | FRONTEND | Hero con Reed de cuerpo completo y sin la línea del junco (modifica R-012) | aplicado (07-oct-2026) |
 | R-025 | LÓGICA | Dos voces para el lector (Antonio y Mauricio) en `/api/tts` | diseñado (10-oct-2026) |
+| R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | diseñado (10-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 

@@ -1,6 +1,6 @@
 # Spec R-015 — Hablar con Reed por voz sobre el pasaje que lees
 
-> Estado: aplicado (07-oct-2026) — `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` verdes; conversación real pendiente (V3).
+> Estado: superado por R-026 (10-oct-2026): solo el lector usa voz. Antes: aplicado (07-oct-2026) — `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` verdes; conversación real pendiente (V3).
 > Capa: FRONTEND. `frontend/src/components/reed/VoiceChat.tsx` (nuevo),
 > `frontend/src/services/voice.ts` (nuevo),
 > `frontend/src/components/reed/modes/CompanionMode.tsx`, `frontend/src/services/api.ts` (solo
