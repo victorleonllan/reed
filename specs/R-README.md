@@ -76,6 +76,7 @@ referencia, nunca se modifica).
 | R-024 | FRONTEND | Hero con Reed de cuerpo completo y sin la línea del junco (modifica R-012) | aplicado (07-oct-2026) |
 | R-025 | LÓGICA | Dos voces para el lector (Antonio y Mauricio) en `/api/tts` | diseñado (10-oct-2026) |
 | R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | diseñado (10-oct-2026) |
+| R-027 | FRONTEND | Audio solo cuando lo pides: caché en el navegador y voz elegible | diseñado (10-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
