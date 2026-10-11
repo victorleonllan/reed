@@ -74,6 +74,7 @@ referencia, nunca se modifica).
 | R-022 | LÓGICA | README de la v2 y guía para poner en marcha el fork | aplicado (07-oct-2026) |
 | R-023 | FRONTEND | Transición entre modos sin la línea del junco (modifica R-008) | aplicado (07-oct-2026) |
 | R-024 | FRONTEND | Hero con Reed de cuerpo completo y sin la línea del junco (modifica R-012) | aplicado (07-oct-2026) |
+| R-025 | LÓGICA | Dos voces para el lector (Antonio y Mauricio) en `/api/tts` | diseñado (10-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
