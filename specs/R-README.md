@@ -77,6 +77,7 @@ referencia, nunca se modifica).
 | R-025 | LÓGICA | Dos voces para el lector (Antonio y Mauricio) en `/api/tts` | diseñado (10-oct-2026) |
 | R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | diseñado (10-oct-2026) |
 | R-027 | FRONTEND | Audio solo cuando lo pides: caché en el navegador y voz elegible | diseñado (10-oct-2026) |
+| R-028 | FRONTEND | Sesión de escucha planificada: 5, 15 o 30 min y voz antes de generar audio | diseñado (10-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
@@ -105,5 +106,19 @@ spec-fleet-cadena reed:R001+reed:R002+reed:R003 reed:R004+reed:R005+reed:R006 \
 
 Al final hace `git push origin HEAD` al fork. Si un paso falla, se detiene; se arregla y se
 vuelve a correr **el mismo comando**: salta lo ya aplicado.
+
+### Tanda del 10-oct-2026 (voz del lector)
+
+```
+1  R-025 + R-026 + R-027
+2  R-028
+```
+
+```
+spec-fleet-cadena reed:R025+reed:R026+reed:R027 reed:R028
+```
+
+R-027 depende de R-025 solo en ejecución (manda `voice`; el servidor viejo lo ignora), así que
+compila en paralelo. R-028 usa archivos de R-027 y espera al paso 1.
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).

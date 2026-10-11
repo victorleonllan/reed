@@ -19,6 +19,12 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **V8** (R-020) — bienvenida en un navegador limpio: aparece la primera vez y no la segunda;
   elegir un modo al final lo deja en el botón de Reed; Escape y «Saltar» la cierran; móvil y escritorio.
 
+- **V9** (R-027) — escuchar un párrafo, recargar y volver a escucharlo: sin segundo
+  `POST /api/tts`; el uso de ElevenLabs (`/v1/usage/character-stats`) no sube.
+- **V10** (R-028) — planificador en móvil y escritorio: nada suena ni se genera antes de
+  «Empezar»; con 5 min la lectura para sola al final del tramo; comparar los minutos reales con
+  el estimado (`CHARS_PER_MINUTE = 890`) y ajustar la constante si se desvía más de 15 %.
+
 ## Decisiones abiertas de Victor
 
 - **Precio y límites de Reed Pro** (R-001): quedó MXN 99/mes y 990/año, con 20 000 caracteres
@@ -33,3 +39,9 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 
 - Reabrir la bienvenida de los modos desde el perfil (R-020).
 - Slugs de los artículos en el sitemap (R-018).
+- **Agente por libro al subir** (R-026): sin voz en el Compañero, el agente que se crea por cada
+  libro subido ya no se usa. Dejar de crearlo ahorra ~1 minuto por subida; es un spec LÓGICA.
+  Sacar también `@elevenlabs/react` del `package.json` del frontend.
+- **Costo de ElevenLabs** (medido el 10-oct-2026): ~390 créditos por minuto de audio
+  (`eleven_multilingual_v2`), ~19 por respuesta escrita. El tope Pro de 20 000 caracteres/día
+  cuesta ~USD 44/mes si se usa entero.
