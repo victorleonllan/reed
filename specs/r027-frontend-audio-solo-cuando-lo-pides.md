@@ -1,6 +1,6 @@
 # Spec R-027 — Audio solo cuando lo pides, y nunca dos veces
 
-> Estado: diseñado (10-oct-2026).
+> Estado: aplicado (15-oct-2026) — `tsc` raíz + frontend y `lint` verdes; criterios 1-3 (Red, voz, navegación privada) pendientes de probar en el navegador. Toca además `ReaderView.tsx` (pasa `voice: getReaderVoice()`, imprescindible por `voice` obligatorio).
 > Capa: FRONTEND. `frontend/src/services/api.ts` (solo `synthesizeSpeech`),
 > `frontend/src/services/readerVoices.ts` (nuevo), `frontend/src/services/audioCache.ts`
 > (nuevo), `frontend/src/components/reader/ListenBar.tsx` (solo `useParagraphVoice`).

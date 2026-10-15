@@ -5,6 +5,7 @@ import { useReed } from '../../context/ReedContext';
 import { useAccount } from '../../context/AccountContext';
 import { ReadingPage } from './ReadingParagraph';
 import { formatListenTime, ListenBar, useParagraphVoice } from './ListenBar';
+import { getReaderVoice } from '../../services/readerVoices';
 import { READING_THEMES, ReadingSettings, readingTextStyle, useIdleChrome } from './ReadingSettings';
 import { ChapterDrawer, ReadingProgressRail } from './ReadingProgressRail';
 import { WhereYouLeftOff } from './WhereYouLeftOff';
@@ -235,6 +236,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     recordParagraphRead(paragraph.order);
     setActiveReadingIndex(index);
     voice.speak(paragraph, {
+      voice: getReaderVoice(),
       rate: rateRef.current,
       following: current.paragraphs[index + 1],
       onEnd: () => speakParagraph(index + 1),

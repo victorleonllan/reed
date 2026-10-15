@@ -1,4 +1,6 @@
 import { Book, Chapter, QuizQuestion } from '../types';
+import { getCachedAudio, putCachedAudio } from './audioCache';
+import type { ReaderVoice } from './readerVoices';
 
 // Same origin in production (Next serves this app and /api); `npm run dev` proxies /api to the backend.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
@@ -112,10 +114,18 @@ export async function generateQuiz(chapterTitle: string, paragraphsText: string)
 
 // ---------- voice (ElevenLabs text to speech) ----------
 
-/** MP3 of the text in the ElevenLabs voice, as an object URL. Throws ApiError (429 = daily limit). */
-export async function synthesizeSpeech(text: string): Promise<string> {
-  const res = await apiFetch('/api/tts', { method: 'POST', body: JSON.stringify({ text: text.slice(0, 2500) }) });
-  return URL.createObjectURL(await res.blob());
+/**
+ * MP3 of the text in the chosen reader voice, as an object URL. Served from the browser cache when
+ * this voice already read this text, so it is generated (and paid) only once. Throws ApiError (429 = daily limit).
+ */
+export async function synthesizeSpeech(text: string, voice: ReaderVoice): Promise<string> {
+  const clipped = text.slice(0, 2500);
+  const cached = await getCachedAudio(voice, clipped);
+  if (cached) return cached;
+  const res = await apiFetch('/api/tts', { method: 'POST', body: JSON.stringify({ text: clipped, voice }) });
+  const blob = await res.blob();
+  await putCachedAudio(voice, clipped, blob);
+  return URL.createObjectURL(blob);
 }
 
 // ---------- library ----------

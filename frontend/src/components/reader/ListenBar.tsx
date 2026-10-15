@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Play, Pause, X, SkipBack, SkipForward } from 'lucide-react';
 import { Paragraph } from '../../types';
 import { isBackendSession, synthesizeSpeech } from '../../services/api';
+import type { ReaderVoice } from '../../services/readerVoices';
 import { ReedBubble } from '../reed/ReedBubble';
 import { IconButton } from '../ui/IconButton';
 
@@ -12,8 +13,9 @@ export const formatListenTime = (secs: number) => {
 };
 
 interface SpeakOptions {
+  voice: ReaderVoice;
   rate: number;
-  /** Next paragraph, pre-loaded while this one plays. */
+  /** Next paragraph, pre-loaded while this one plays. Only when the caller passes it; nothing else is pre-loaded. */
   following?: Paragraph;
   onEnd: () => void;
   onError: () => void;
@@ -21,7 +23,8 @@ interface SpeakOptions {
 
 /**
  * The voice that reads one paragraph at a time. ElevenLabs when signed in (one audio per paragraph,
- * the next one pre-loaded); if the daily limit runs out or playback fails, the browser's voice.
+ * cached in the browser by voice + text; the next one pre-loaded only if the caller asks); if the
+ * daily limit runs out or playback fails, the browser's voice.
  * Each new `speak` or `stop` invalidates the previous one, so stale callbacks never fire.
  */
 export function useParagraphVoice() {
@@ -37,12 +40,14 @@ export function useParagraphVoice() {
     window.speechSynthesis?.cancel();
   }, []);
 
-  const audioFor = (paragraph: Paragraph) => {
-    let url = cacheRef.current.get(paragraph.id);
+  // Keyed by voice + paragraph so switching voices never replays the other voice's audio.
+  const audioFor = (paragraph: Paragraph, voice: ReaderVoice) => {
+    const key = `${voice}:${paragraph.id}`;
+    let url = cacheRef.current.get(key);
     if (!url) {
-      url = synthesizeSpeech(paragraph.text);
-      url.catch(() => cacheRef.current.delete(paragraph.id));
-      cacheRef.current.set(paragraph.id, url);
+      url = synthesizeSpeech(paragraph.text, voice);
+      url.catch(() => cacheRef.current.delete(key));
+      cacheRef.current.set(key, url);
     }
     return url;
   };
@@ -56,7 +61,7 @@ export function useParagraphVoice() {
     };
   }, [stop]);
 
-  const speak = async (paragraph: Paragraph, { rate, following, onEnd, onError }: SpeakOptions) => {
+  const speak = async (paragraph: Paragraph, { voice, rate, following, onEnd, onError }: SpeakOptions) => {
     stop();
     const run = runRef.current;
     const ended = () => {
@@ -65,14 +70,14 @@ export function useParagraphVoice() {
 
     if (isBackendSession() && !useBrowserVoiceRef.current) {
       try {
-        const url = await audioFor(paragraph);
+        const url = await audioFor(paragraph, voice);
         if (run !== runRef.current) return;
         const audio = new Audio(url);
         audio.playbackRate = rate;
         audio.onended = ended;
         audioRef.current = audio;
         await audio.play();
-        if (following) audioFor(following).catch(() => {});
+        if (following) audioFor(following, voice).catch(() => {});
         return;
       } catch {
         if (run !== runRef.current) return;
@@ -85,7 +90,7 @@ export function useParagraphVoice() {
       return;
     }
     const utterance = new SpeechSynthesisUtterance(paragraph.text);
-    utterance.lang = 'es-ES';
+    utterance.lang = 'es-MX';
     utterance.rate = rate;
     utterance.onend = ended;
     utterance.onerror = () => {
