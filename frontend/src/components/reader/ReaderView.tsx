@@ -5,7 +5,8 @@ import { useReed } from '../../context/ReedContext';
 import { useAccount } from '../../context/AccountContext';
 import { ReadingPage } from './ReadingParagraph';
 import { formatListenTime, ListenBar, useParagraphVoice } from './ListenBar';
-import { getReaderVoice } from '../../services/readerVoices';
+import { isBackendSession } from '../../services/api';
+import { ListenSession, paragraphMinutes, publishListenSession, SessionPlanner, StreamItem, voiceName } from './SessionPlanner';
 import { READING_THEMES, ReadingSettings, readingTextStyle, useIdleChrome } from './ReadingSettings';
 import { ChapterDrawer, ReadingProgressRail } from './ReadingProgressRail';
 import { WhereYouLeftOff } from './WhereYouLeftOff';
@@ -67,9 +68,38 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const showChrome = useIdleChrome();
   const [tocOpen, setTocOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Every paragraph in reading order (pages and chapters flattened): a listening session is a range of it.
+  const stream = useMemo(() => {
+    const items: StreamItem[] = [];
+    pages.forEach((pg) => pg.paragraphs.forEach((paragraph, index) => {
+      items.push({ paragraph, page: pg.index, index, chapterTitle: pg.chapterTitle, lastInChapter: false });
+    }));
+    items.forEach((item, i) => {
+      item.lastInChapter = i === items.length - 1 || pages[items[i + 1].page].chapterNumber !== pages[item.page].chapterNumber;
+    });
+    return items;
+  }, [pages]);
+  const pageStarts = useMemo(() => {
+    const starts: number[] = [];
+    let count = 0;
+    pages.forEach((pg) => { starts.push(count); count += pg.paragraphs.length; });
+    return starts;
+  }, [pages]);
+  const [session, setSession] = useState<ListenSession | null>(null);
+  const [sessionPos, setSessionPos] = useState(-1);
+  const [sessionDone, setSessionDone] = useState<{ minutes: number; next: number | null } | null>(null);
+  const [plannerFrom, setPlannerFrom] = useState<number | null>(null);
+  // Second of the session at which the current paragraph started (to estimate what is left of it).
+  const [paragraphStartedAt, setParagraphStartedAt] = useState(0);
+  const sessionRef = useRef<ListenSession | null>(null);
+  const sessionPosRef = useRef(-1);
+  const elapsedRef = useRef(secondsElapsed);
+  const streamRef = useRef(stream);
   const pageIndexRef = useRef(pageIndex);
   const pagesRef = useRef(pages);
   const rateRef = useRef(playbackRate);
+  streamRef.current = stream;
+  elapsedRef.current = secondsElapsed;
   const onProgressRef = useRef(onProgress);
   const addSecondsRef = useRef(addReadingSeconds);
   pageIndexRef.current = pageIndex;
@@ -92,6 +122,19 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     setSpeakingPage(index);
   };
 
+  const setPosition = (flat: number) => {
+    sessionPosRef.current = flat;
+    setSessionPos(flat);
+  };
+
+  const endSession = () => {
+    sessionRef.current = null;
+    setSession(null);
+    setPosition(-1);
+    setSessionDone(null);
+    setPlannerFrom(null);
+  };
+
   // Voz de ElevenLabs (con sesión) o del navegador: ver useParagraphVoice.
   const voice = useParagraphVoice();
   const stopSpeech = voice.stop;
@@ -110,6 +153,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     setActiveReadingIndex(-1);
     setIsPlaying(false);
     stopSpeech();
+    endSession();
   }, [book.id]);
 
   useEffect(() => {
@@ -141,10 +185,27 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   useEffect(() => {
     let interval: number | undefined;
     if (isPlaying && mode === 'reader') {
-      interval = window.setInterval(() => setSecondsElapsed((value) => value + 1), 1000 / playbackRate);
+      interval = window.setInterval(() => setSecondsElapsed((value) => value + 1), 1000);
     }
     return () => window.clearInterval(interval);
-  }, [isPlaying, playbackRate, mode]);
+  }, [isPlaying, mode]);
+
+  // ReaderMode describes today's session; it lives only while this book is open.
+  useEffect(() => {
+    if (!session) {
+      publishListenSession(null);
+      return;
+    }
+    const last = stream[session.end];
+    publishListenSession({
+      minutes: session.minutes,
+      voiceName: isBackendSession() ? voiceName(session.voice) : undefined,
+      untilEnd: session.untilEnd,
+      endChapterTitle: last?.chapterTitle ?? '',
+      endParagraph: last?.paragraph.order ?? 1,
+    });
+  }, [session, stream]);
+  useEffect(() => () => publishListenSession(null), []);
 
   // The page crossing the upper part of the screen is the current page (header, progress).
   useEffect(() => {
@@ -215,41 +276,88 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   }, [pages.length]);
 
-  const speakParagraph = (index: number) => {
-    const current = pagesRef.current[speakingPageRef.current];
+  /** Highlights stream[flat] as the session's paragraph, scrolling when it is on another page. */
+  const moveTo = (flat: number) => {
+    const item = streamRef.current[flat];
+    if (!item) return;
+    setPosition(flat);
+    if (item.page !== speakingPageRef.current) {
+      setSpeaking(item.page);
+      scrollToPage(item.page);
+    }
+    setActiveReadingIndex(item.index);
+  };
+
+  /** The session is over: reading stops (it never goes on by itself) and the bar offers another one. */
+  const finishSession = () => {
+    const finished = sessionRef.current;
+    if (!finished) return;
+    stopSpeech();
+    setIsPlaying(false);
+    setActiveReadingIndex(-1);
+    sessionRef.current = null;
+    setSession(null);
+    setPosition(-1);
+    const next = finished.end + 1 < streamRef.current.length ? finished.end + 1 : null;
+    setSessionDone({ minutes: Math.max(1, Math.round(elapsedRef.current / 60)), next });
+  };
+
+  // Reads stream[flat] inside the session; the next paragraph is pre-loaded only while it is still inside it.
+  const speakAt = (flat: number) => {
+    const current = sessionRef.current;
     if (!current) return;
     stopSpeech();
-    if (index >= current.paragraphs.length) {
-      const nextPage = speakingPageRef.current + 1;
-      if (nextPage < pagesRef.current.length) {
-        setSpeaking(nextPage);
-        scrollToPage(nextPage);
-        speakParagraph(0);
-        return;
-      }
-      setIsPlaying(false);
-      setActiveReadingIndex(-1);
+    if (flat > current.end || !streamRef.current[flat]) {
+      finishSession();
       return;
     }
-
-    const paragraph = current.paragraphs[index];
+    const { paragraph } = streamRef.current[flat];
+    moveTo(flat);
+    setParagraphStartedAt(elapsedRef.current);
     recordParagraphRead(paragraph.order);
-    setActiveReadingIndex(index);
     voice.speak(paragraph, {
-      voice: getReaderVoice(),
+      voice: current.voice,
       rate: rateRef.current,
-      following: current.paragraphs[index + 1],
-      onEnd: () => speakParagraph(index + 1),
+      following: flat < current.end ? streamRef.current[flat + 1]?.paragraph : undefined,
+      onEnd: () => speakAt(flat + 1),
       onError: () => setIsPlaying(false),
     });
   };
 
-  const playFromActive = () => {
+  // Nothing sounds until the reader picks how long today's session lasts.
+  const openPlanner = (from: number) => {
+    stopSpeech();
+    setIsPlaying(false);
+    setPlannerFrom(from);
+  };
+
+  const beginListening = (planned: ListenSession) => {
+    sessionRef.current = planned;
+    setSession(planned);
+    setSessionDone(null);
+    setPlannerFrom(null);
+    setSecondsElapsed(0);
+    elapsedRef.current = 0;
     setIsPlaying(true);
-    if (activeReadingIndex < 0) setSpeaking(pageIndexRef.current);
-    const target = activeReadingIndex >= 0 ? activeReadingIndex : 0;
-    setActiveReadingIndex(target);
-    speakParagraph(target);
+    speakAt(planned.start);
+  };
+
+  // Where a new session starts: after the one just finished, else the highlighted paragraph, else this page.
+  const plannerStart = () => {
+    if (sessionDone?.next != null) return sessionDone.next;
+    const speaking = pageStarts[speakingPageRef.current];
+    if (activeReadingIndex >= 0 && speaking !== undefined) return speaking + activeReadingIndex;
+    return pageStarts[Math.min(pageIndexRef.current, pageStarts.length - 1)] ?? 0;
+  };
+
+  const listen = () => {
+    setMode('reader');
+    if (sessionRef.current) {
+      setIsPlaying(true);
+      speakAt(sessionPosRef.current);
+      return;
+    }
+    openPlanner(plannerStart());
   };
 
   const handleTogglePlay = () => {
@@ -258,28 +366,26 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       setIsPlaying(false);
       return;
     }
-    setMode('reader');
-    playFromActive();
+    listen();
   };
 
   useEffect(() => {
     if (!autoListen) return;
     setMode('reader');
-    setIsPlaying(true);
-    setSpeaking(pageIndexRef.current);
-    setActiveReadingIndex(0);
-    speakParagraph(0);
+    openPlanner(pageStarts[Math.min(pageIndexRef.current, pageStarts.length - 1)] ?? 0);
   }, [book.id, autoListen]);
 
   const handleListenFrom = (paragraph: Paragraph) => {
-    const pageOf = pages.findIndex((item) => item.paragraphs.some((p) => p.id === paragraph.id));
-    if (pageOf < 0) return;
-    const index = pages[pageOf].paragraphs.findIndex((item) => item.id === paragraph.id);
-    setSpeaking(pageOf);
+    const flat = stream.findIndex((item) => item.paragraph.id === paragraph.id);
+    if (flat < 0) return;
     setMode('reader');
-    setIsPlaying(true);
-    setActiveReadingIndex(index);
-    speakParagraph(index);
+    const current = sessionRef.current;
+    if (current && flat >= current.start && flat <= current.end) {
+      setIsPlaying(true);
+      speakAt(flat);
+      return;
+    }
+    openPlanner(flat);
   };
 
   if (!page) {
@@ -307,10 +413,27 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     if (open) setReedMenuOpen(false);
   };
   const chrome = showChrome || tocOpen || settingsOpen || isReedPanelOpen || reedMenuOpen;
-  const startReading = (index: number) => {
-    setActiveReadingIndex(index);
-    if (isPlaying) speakParagraph(index);
+  // Previous / next paragraph: inside the session's range when there is one, else inside the page.
+  const stepParagraph = (delta: number) => {
+    const current = sessionRef.current;
+    if (!current) {
+      const count = pages[speakingPageRef.current]?.paragraphs.length || 1;
+      setActiveReadingIndex(Math.min(count - 1, Math.max(0, activeReadingIndex + delta)));
+      return;
+    }
+    const target = Math.min(current.end, Math.max(current.start, sessionPosRef.current + delta));
+    if (isPlaying) speakAt(target);
+    else moveTo(target);
   };
+  let sessionTime = '';
+  if (session && sessionPos >= 0) {
+    let remaining = 0;
+    for (let i = sessionPos + 1; i <= session.end; i++) remaining += paragraphMinutes(stream[i].paragraph.text, playbackRate) * 60;
+    const currentSeconds = paragraphMinutes(stream[sessionPos].paragraph.text, playbackRate) * 60;
+    remaining += Math.max(0, currentSeconds - (secondsElapsed - paragraphStartedAt));
+    sessionTime = `${formatListenTime(secondsElapsed)} / ${formatListenTime(Math.round(secondsElapsed + remaining))}`;
+  }
+  const nextSession = sessionDone?.next ?? null;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] transition-colors duration-states" style={{ background: theme.bg, color: theme.fg }}>
@@ -402,20 +525,25 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           isPlaying={isPlaying}
           onTogglePlay={handleTogglePlay}
           chapterTitle={page.chapterTitle}
-          currentTimeFormatted={formatListenTime(secondsElapsed)}
+          currentTimeFormatted={sessionTime}
+          voiceName={session && isBackendSession() ? voiceName(session.voice) : undefined}
+          sessionDone={sessionDone ? {
+            minutes: sessionDone.minutes,
+            onAnother: nextSession !== null ? () => openPlanner(nextSession) : undefined,
+          } : undefined}
           playbackRate={playbackRate}
           onChangePlaybackRate={() => {
             const next = PLAYBACK_RATES[(PLAYBACK_RATES.indexOf(playbackRate) + 1) % PLAYBACK_RATES.length];
             setPlaybackRate(next);
             rateRef.current = next;
-            if (!voice.setRate(next) && isPlaying) speakParagraph(activeReadingIndex >= 0 ? activeReadingIndex : 0);
+            if (!voice.setRate(next) && isPlaying && sessionRef.current) speakAt(sessionPosRef.current);
           }}
-          onPrevParagraph={() => startReading(Math.max(0, activeReadingIndex - 1))}
-          onNextParagraph={() => startReading(Math.min((pages[speakingPageRef.current]?.paragraphs.length || 1) - 1, activeReadingIndex + 1))}
+          onPrevParagraph={() => stepParagraph(-1)}
+          onNextParagraph={() => stepParagraph(1)}
           menuOpen={reedMenuOpen}
           onMenuOpenChange={showReedMenu}
           onOpenReedAction={() => showReedPanel(true)}
-          onClose={() => { stopSpeech(); setIsPlaying(false); setMode('companion'); }}
+          onClose={() => { stopSpeech(); setIsPlaying(false); endSession(); setMode('companion'); }}
         />
       ) : (
         <div className="fixed bottom-6 right-6 z-40">
@@ -423,12 +551,22 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             menuOpen={reedMenuOpen}
             onMenuOpenChange={showReedMenu}
             onOpenModeAction={(modeKey) => {
-              if (modeKey === 'reader') playFromActive();
+              if (modeKey === 'reader') listen();
               else if (modeKey !== 'sleeping') showReedPanel(true);
             }}
           />
         </div>
       )}
+
+      <SessionPlanner
+        isOpen={plannerFrom !== null}
+        stream={stream}
+        start={plannerFrom ?? 0}
+        rate={playbackRate}
+        withVoices={isBackendSession()}
+        onStart={beginListening}
+        onClose={() => setPlannerFrom(null)}
+      />
 
       <AnimatePresence>
         {isReedPanelOpen && (

@@ -1,6 +1,6 @@
 # Spec R-028 — Sesión de escucha planificada: «¿cuánto tiempo tienes hoy?»
 
-> Estado: diseñado (10-oct-2026).
+> Estado: aplicado (15-oct-2026) — `tsc` raíz + frontend y `lint` verdes; criterios 1-5 (Red, tramo, pausa, libro corto, voz recordada) pendientes de probar en el navegador. El resumen de la sesión llega a `ReaderMode` por un store en `SessionPlanner.tsx`, sin tocar `ReedModePanel`.
 > Capa: FRONTEND. `frontend/src/components/reader/SessionPlanner.tsx` (nuevo),
 > `frontend/src/components/reader/ReaderView.tsx`, `frontend/src/components/reader/ListenBar.tsx`
 > (solo la barra, no `useParagraphVoice`), `frontend/src/components/reed/modes/ReaderMode.tsx`.

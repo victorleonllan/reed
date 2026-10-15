@@ -113,7 +113,12 @@ interface ListenBarProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   chapterTitle: string;
+  /** `mm:ss / mm:ss` (elapsed / total of the session); empty when there is no session. */
   currentTimeFormatted: string;
+  /** Name of the voice reading the session; omitted when the browser voice reads. */
+  voiceName?: string;
+  /** The session reached its last paragraph: shown instead of the playing state. */
+  sessionDone?: { minutes: number; onAnother?: () => void };
   playbackRate: number;
   onChangePlaybackRate: () => void;
   onPrevParagraph?: () => void;
@@ -144,6 +149,8 @@ export const ListenBar: React.FC<ListenBarProps> = ({
   onTogglePlay,
   chapterTitle,
   currentTimeFormatted,
+  voiceName,
+  sessionDone,
   playbackRate,
   onChangePlaybackRate,
   onPrevParagraph,
@@ -177,15 +184,35 @@ export const ListenBar: React.FC<ListenBarProps> = ({
 
       <div className="min-w-0 flex-1 flex items-center gap-3">
         <VoiceWave active={isPlaying} />
-        <div className="min-w-0">
-          <span className="block text-[11px] font-bold text-ambar-ink uppercase tracking-wider" aria-live="polite">
-            {isPlaying ? 'Escuchando' : 'En pausa'}
-          </span>
-          <p className="text-xs sm:text-sm font-semibold text-ink truncate">{chapterTitle}</p>
-        </div>
+        {sessionDone ? (
+          <div className="min-w-0 flex items-center gap-2" aria-live="polite">
+            <p className="text-xs sm:text-sm font-semibold text-ink truncate">
+              Sesión lista: escuchaste {sessionDone.minutes} min
+            </p>
+            {sessionDone.onAnother && (
+              <button
+                type="button"
+                onClick={sessionDone.onAnother}
+                className="focus-ring flex-shrink-0 h-8 px-3 text-xs font-bold rounded-pill border border-line-strong hover:bg-paper-sunk text-ink transition-colors duration-states"
+              >
+                Otra sesión
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <span className="block text-[11px] font-bold text-ambar-ink uppercase tracking-wider" aria-live="polite">
+              {isPlaying ? 'Escuchando' : 'En pausa'}
+              {voiceName && <span className="normal-case tracking-normal font-semibold text-ink-muted"> · {voiceName}</span>}
+            </span>
+            <p className="text-xs sm:text-sm font-semibold text-ink truncate">{chapterTitle}</p>
+          </div>
+        )}
       </div>
 
-      <span className="text-xs font-medium text-ink-muted tabular-nums hidden sm:inline">{currentTimeFormatted}</span>
+      {currentTimeFormatted && (
+        <span className="text-xs font-medium text-ink-muted tabular-nums hidden sm:inline">{currentTimeFormatted}</span>
+      )}
 
       <button
         type="button"
