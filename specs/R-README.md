@@ -78,6 +78,9 @@ referencia, nunca se modifica).
 | R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | diseñado (10-oct-2026) |
 | R-027 | FRONTEND | Audio solo cuando lo pides: caché en el navegador y voz elegible | diseñado (10-oct-2026) |
 | R-028 | FRONTEND | Sesión de escucha planificada: 5, 15 o 30 min y voz antes de generar audio | diseñado (10-oct-2026) |
+| R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | diseñado (15-oct-2026) |
+| R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | diseñado (15-oct-2026) |
+| R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | diseñado (15-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
@@ -120,5 +123,21 @@ spec-fleet-cadena reed:R025+reed:R026+reed:R027 reed:R028
 
 R-027 depende de R-025 solo en ejecución (manda `voice`; el servidor viejo lo ignora), así que
 compila en paralelo. R-028 usa archivos de R-027 y espera al paso 1.
+
+### Tanda del 15-oct-2026 (audio pregenerado con VoiceStudio)
+
+Incluye la tanda del 10-oct, que sigue sin ejecutar: R-029 necesita `config.readerVoices` de
+R-025.
+
+```
+1  R-025 + R-026 + R-027
+2  R-029            (solo: instala @vercel/blob y toca src/config.ts)
+3  R-028 + R-030
+4  R-031            (spec-fleet no lo junta con el paso 3)
+```
+
+```
+spec-fleet-cadena reed:R025+reed:R026+reed:R027 reed:R029 reed:R028+reed:R030 reed:R031
+```
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).
