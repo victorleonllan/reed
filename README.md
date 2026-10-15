@@ -111,6 +111,42 @@ marca de Gutenberg. Para agregar o restaurar libros, edita `CATALOG` en
 `scripts/seed-catalog.mts` y corre `npm run db:seed-catalog` (se puede repetir sin duplicar;
 `-- --dry-run` muestra qué haría). Son filas con `is_public = true` y dueño `catalog`.
 
+## Máquina de audio (VoiceStudio)
+
+El audio del lector para los libros del catálogo se puede generar **una vez**, gratis, en una
+máquina propia con [VoiceStudio](https://github.com/debpalash/VoiceStudio), y servirse a todos
+los lectores sin gastar créditos de ElevenLabs. Cada párrafo queda en Vercel Blob en una ruta
+que se calcula de la voz y el texto (`src/lib/audio-library.ts`), y `/api/tts` lo busca ahí
+antes de llamar a ElevenLabs. La máquina puede ser un PC con Windows (GPU NVIDIA) o un Mac con
+Apple Silicon; el script habla con VoiceStudio por HTTP, así que también puede usar el
+VoiceStudio de otra máquina (por ejemplo, por Tailscale).
+
+1. **Instala VoiceStudio** y ábrelo. Windows (PowerShell): `irm https://voicestudio.sh/install | iex`;
+   macOS: `curl -fsSL https://voicestudio.sh/install | sh`. Instala el modelo **OmniVoice**
+   cuando lo pida. Su backend escucha en `http://127.0.0.1:3900` (`VOICESTUDIO_URL`).
+2. **Crea dos perfiles de voz** llamados **exactamente** `Reed Antonio` y `Reed Mauricio`, con
+   el diseño de voz o clonando una grabación **con permiso** de quien habla. El nombre es lo
+   que el script le pide a VoiceStudio (`localProfile` en `src/config.ts`).
+3. **Crea el almacén de audio.** Vercel → Storage → Blob → crea un store **público**. Copia el
+   token a `BLOB_READ_WRITE_TOKEN` en el `.env.local` de la máquina de audio, y la URL pública
+   del store a `REED_AUDIO_BASE_URL` en ese `.env.local` **y** en las variables de Vercel. La
+   máquina de audio también necesita `DATABASE_URL` (solo lee los libros; no escribe en la base).
+   Si VoiceStudio tiene clave, ponla en `VOICESTUDIO_API_KEY`.
+4. **Prueba antes de la corrida completa:**
+   - `npm run audio:generate -- --catalog --dry-run` — cuenta párrafos, caracteres, cuántos ya
+     existen y los créditos de ElevenLabs que se evitan. No llama a VoiceStudio ni sube nada.
+   - `npm run audio:generate -- --catalog --limit 5` — genera 5 párrafos. Escúchalos en el Blob.
+   - `npm run audio:generate -- --catalog` — la corrida completa (una voz por corrida; la otra
+     con `--voice mauricio`). Para un libro solo: `--book <documentId>`.
+5. **Si se corta**, vuelve a correr el mismo comando: los párrafos que ya están en el Blob se
+   saltan, y un párrafo que falló dos veces se reintenta en la siguiente corrida (el comando
+   termina con código 1 cuando hubo fallidos). **Para regenerar todo** (otro motor, perfiles
+   nuevos), sube `localTts.libraryVersion` en `src/config.ts` (`v1` → `v2`): las rutas
+   cambian y los archivos viejos quedan donde estaban, sin borrarse.
+
+VoiceStudio es AGPL-3.0; usarlo sin modificar para generar archivos no obliga a publicar el
+código de Reed.
+
 ## Poner en marcha el fork
 
 En este orden. Cada paso dice dónde se obtiene el valor y qué variable de `.env.example` llena.

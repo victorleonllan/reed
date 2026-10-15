@@ -24,6 +24,12 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **V10** (R-028) — planificador en móvil y escritorio: nada suena ni se genera antes de
   «Empezar»; con 5 min la lectura para sola al final del tramo; comparar los minutos reales con
   el estimado (`CHARS_PER_MINUTE = 890`) y ajustar la constante si se desvía más de 15 %.
+- **V11** (R-031) — `npm run audio:generate -- --catalog --dry-run`: anotar párrafos,
+  caracteres y créditos de ElevenLabs que se evitarían.
+- **V12** (R-031) — `npm run audio:generate -- --catalog --limit 5`: los 5 mp3 aparecen en el
+  Blob y suenan bien en español.
+- **V13** (R-030) — en el lector, un párrafo generado responde `X-Reed-Audio: library` y el
+  uso de ElevenLabs no sube.
 
 ## Decisiones abiertas de Victor
 
@@ -34,6 +40,8 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **Correo de soporte y remitentes** (`src/config.ts`): `hola@reed.app` es un placeholder.
 - **Términos y privacidad** (R-017): son un borrador; revisión legal antes de cobrar en serio.
 - **Dominio** del fork y `NEXT_PUBLIC_SITE_URL`.
+- **Espacio del Blob** (R-031): medir el tamaño real de los mp3 en V12 y proyectarlo a los 5
+  libros antes de generar la segunda voz; revisar el límite de Blob del plan de Vercel.
 
 ## Mejoras detectadas, sin spec
 

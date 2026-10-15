@@ -80,7 +80,7 @@ referencia, nunca se modifica).
 | R-028 | FRONTEND | Sesión de escucha planificada: 5, 15 o 30 min y voz antes de generar audio | diseñado (10-oct-2026) |
 | R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | aplicado (15-oct-2026) |
 | R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | aplicado (15-oct-2026) |
-| R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | diseñado (15-oct-2026) |
+| R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
