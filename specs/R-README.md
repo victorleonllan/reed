@@ -78,7 +78,7 @@ referencia, nunca se modifica).
 | R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | aplicado (15-oct-2026) — pendiente: `src/config.ts` aún promete voz en Pro |
 | R-027 | FRONTEND | Audio solo cuando lo pides: caché en el navegador y voz elegible | diseñado (10-oct-2026) |
 | R-028 | FRONTEND | Sesión de escucha planificada: 5, 15 o 30 min y voz antes de generar audio | diseñado (10-oct-2026) |
-| R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | diseñado (15-oct-2026) |
+| R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | aplicado (15-oct-2026) |
 | R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | diseñado (15-oct-2026) |
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | diseñado (15-oct-2026) |
 

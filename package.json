@@ -18,6 +18,7 @@
     "@clerk/nextjs": "^7.9.7",
     "@elevenlabs/react": "^1.15.2",
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.8.2",
     "drizzle-orm": "^0.45.3",
     "jszip": "^3.10.2",
     "motion": "^14.0.0",

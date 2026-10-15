@@ -1,6 +1,6 @@
 # Spec R-029 — Biblioteca de audio pregenerado (claves y almacenamiento)
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026) — `@vercel/blob` ^2.8.2; criterios 1-3 probados con tsx (misma clave con y sin espacios, otra para mauricio, `null` sin `REED_AUDIO_BASE_URL`, `/` final recortada); `tsc` raíz + frontend y `lint` verdes.
 > Capa: LÓGICA. `package.json`, `package-lock.json` (solo `@vercel/blob`), `src/config.ts`
 > (solo `readerVoices` y `localTts`), `src/lib/audio-library.ts` (nuevo), `.env.example`.
 > Depende de: R-025 (`config.readerVoices`).

@@ -12,10 +12,18 @@ export const config = {
   // ElevenLabs voice library, so they live here rather than in env vars. Both are Latin American
   // Spanish speakers and usable through the API on the free plan.
   readerVoices: {
-    antonio: { label: "Antonio", voiceId: "htFfPSZGJwjBv1CL0aMD" }, // soft and unhurried
-    mauricio: { label: "Mauricio", voiceId: "94zOad0g7T7K4oa7zhDq" }, // more standard
+    // localProfile: the VoiceStudio voice profile that replaces it in pre-generated audio (R-029).
+    antonio: { label: "Antonio", voiceId: "htFfPSZGJwjBv1CL0aMD", localProfile: "Reed Antonio" }, // soft and unhurried
+    mauricio: { label: "Mauricio", voiceId: "94zOad0g7T7K4oa7zhDq", localProfile: "Reed Mauricio" }, // more standard
   },
   defaultReaderVoice: "antonio",
+  localTts: {
+    // VoiceStudio engine used by the audio machine (R-031). See VoiceStudio docs/engines.
+    model: "omnivoice",
+    language: "es",
+    // Bump to regenerate every file (new engine, new voice profiles) without deleting the old ones.
+    libraryVersion: "v1",
+  },
   // Placeholder until Victor sets the real address (R-PENDIENTES).
   supportEmail: "hola@reed.app",
   resend: {
