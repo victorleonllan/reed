@@ -1,6 +1,6 @@
 # Spec R-025 — Dos voces para el lector
 
-> Estado: diseñado (10-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `tsc --noEmit` (raíz y `frontend`) y `npm run lint` verdes; `grep ELEVENLABS_VOICE_ID src/lib/elevenlabs.ts` vacío. Criterio 1 (audio real por voz) queda para verificar en ejecución.
 > Capa: LÓGICA. `src/config.ts`, `src/lib/elevenlabs.ts`, `src/app/api/tts/route.ts`.
 > Depende de: nada.
 > Alimenta: R-027 y R-028.

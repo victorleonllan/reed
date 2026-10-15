@@ -8,6 +8,14 @@ export const config = {
     "Reed te lee en voz alta, te resume y responde tus preguntas mientras lees, para que cualquier libro quepa en tu día.",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000",
   appPath: "/app",
+  // Voices the reader can choose for read-aloud (POST /api/tts). Voice IDs are public in the
+  // ElevenLabs voice library, so they live here rather than in env vars. Both are Latin American
+  // Spanish speakers and usable through the API on the free plan.
+  readerVoices: {
+    antonio: { label: "Antonio", voiceId: "htFfPSZGJwjBv1CL0aMD" }, // soft and unhurried
+    mauricio: { label: "Mauricio", voiceId: "94zOad0g7T7K4oa7zhDq" }, // more standard
+  },
+  defaultReaderVoice: "antonio",
   // Placeholder until Victor sets the real address (R-PENDIENTES).
   supportEmail: "hola@reed.app",
   resend: {
@@ -42,3 +50,5 @@ export const config = {
     },
   },
 } as const;
+
+export type ReaderVoice = keyof typeof config.readerVoices;

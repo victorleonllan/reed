@@ -40,10 +40,12 @@ async function elevenlabs(path: string, init: RequestInit = {}): Promise<Respons
   return res;
 }
 
-/** Converts text to MP3 speech and returns the upstream response (body is the audio stream). */
-export async function textToSpeech(text: string): Promise<Response> {
+/**
+ * Converts text to MP3 speech with the given voice and returns the upstream response (body is the
+ * audio stream). The caller picks the voice (see config.readerVoices).
+ */
+export async function textToSpeech(text: string, voiceId: string): Promise<Response> {
   const apiKey = requireEnv("ELEVENLABS_API_KEY");
-  const voiceId = requireEnv("ELEVENLABS_VOICE_ID");
 
   return fetch(`${API_BASE}/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
     method: "POST",
