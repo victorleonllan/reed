@@ -27,8 +27,8 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="font-serif text-2xl font-semibold">Qué es {config.appName}</h2>
         <p>
-          {config.appName} es un compañero de lectura: te lee en voz alta, resume, responde tus
-          preguntas y conversa contigo sobre los libros y documentos que subes. Al crear una cuenta
+          {config.appName} es un compañero de lectura: te lee en voz alta, resume y responde
+          preguntas sobre los libros y documentos que subes. Al crear una cuenta
           aceptas estos términos.
         </p>
       </section>
@@ -58,8 +58,8 @@ export default function TermsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="font-serif text-2xl font-semibold">Límites de uso</h2>
         <p>
-          Cada plan tiene un límite de lectura en voz alta, subidas, conversaciones por voz y
-          respuestas por cada 24 horas. Al llegar al límite, esa función se pausa hasta que se libere
+          Cada plan tiene un límite de lectura en voz alta, subidas y respuestas
+          por cada 24 horas. Al llegar al límite, esa función se pausa hasta que se libere
           tu cuota. Puedo ajustar los límites; si cambian, lo verás reflejado en la página de precios.
         </p>
       </section>
@@ -68,7 +68,7 @@ export default function TermsPage() {
         <h2 className="font-serif text-2xl font-semibold">Lo que subes</h2>
         <p>
           Eres responsable de tener derecho a subir los libros y documentos que usas conmigo. Solo
-          los uso para leértelos y conversar contigo sobre ellos; no los comparto con otras personas.
+          los uso para leértelos y responder tus preguntas sobre ellos; no los comparto con otras personas.
         </p>
       </section>
 

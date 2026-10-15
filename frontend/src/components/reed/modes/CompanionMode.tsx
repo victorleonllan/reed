@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Book, Chapter, Paragraph } from '../../../types';
 import { useReed } from '../../../context/ReedContext';
-import { explainParagraph, isBackendSession, isReedError, summarizeChapter } from '../../../services/api';
+import { explainParagraph, isReedError, summarizeChapter } from '../../../services/api';
 import { Button } from '../../ui/Button';
-import { Lightbulb, Mic } from 'lucide-react';
-import { MAX_PASSAGE_CHARS, VoiceChat } from '../VoiceChat';
+import { Lightbulb } from 'lucide-react';
 import { ReedAnswer, ReedThinking, sessionText, useReedAnswers } from './SessionTestFlow';
 
 interface CompanionModeProps {
@@ -44,7 +43,6 @@ export const CompanionMode: React.FC<CompanionModeProps> = ({
 
   const [companionTab, setCompanionTab] = useState<'summary' | 'curiosity'>('curiosity');
   const [summaryScope, setSummaryScope] = useState<'paragraph' | 'chapter' | 'session'>('session');
-  const [voiceOpen, setVoiceOpen] = useState(false);
 
   // Chapter the reader is in: the one holding the current paragraph, else the one by title.
   const chapter: Chapter | undefined =
@@ -56,9 +54,6 @@ export const CompanionMode: React.FC<CompanionModeProps> = ({
   const curiosityParagraph = currentParagraph ?? chapter?.paragraphs[0] ?? null;
   const curiosityKey = curiosityParagraph ? `${book.id}:curiosity:${curiosityParagraph.id}` : '';
   const curiosity = curiosityKey ? get(curiosityKey) : undefined;
-
-  // Voice: the agent talks about the same paragraph.
-  const voicePassage = (curiosityParagraph?.text ?? '').slice(0, MAX_PASSAGE_CHARS);
 
   // Chapter summary: from the chapter's start up to where the reader is, never further.
   const readUpTo = chapter
@@ -100,27 +95,6 @@ export const CompanionMode: React.FC<CompanionModeProps> = ({
 
   return (
     <div className="space-y-4">
-      {voiceOpen ? (
-        <VoiceChat book={book} passage={voicePassage} onClose={() => setVoiceOpen(false)} />
-      ) : isBackendSession() ? (
-        <Button
-          variant="voice"
-          size="lg"
-          className="w-full"
-          onClick={() => setVoiceOpen(true)}
-          icon={<Mic size={18} strokeWidth={2} />}
-        >
-          Hablar con Reed
-        </Button>
-      ) : (
-        <div className="space-y-1.5">
-          <Button variant="voice" size="lg" className="w-full" disabled icon={<Mic size={18} strokeWidth={2} />}>
-            Hablar con Reed
-          </Button>
-          <p className="text-xs text-ink-muted text-center">Entra con tu cuenta para conversar con Reed</p>
-        </div>
-      )}
-
       {typeof progressPercent === 'number' && (
         <p className="font-serif text-sm text-ink leading-relaxed">{progressPhrase(progressPercent)}</p>
       )}

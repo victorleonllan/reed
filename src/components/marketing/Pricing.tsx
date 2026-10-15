@@ -22,7 +22,6 @@ const yearlyGift =
 const freeFeatures = [
   `Unos ${formatNumber(free.limits.tts_chars)} caracteres leídos en voz alta al día`,
   `Hasta ${formatNumber(free.limits.upload)} libros o documentos subidos al día`,
-  `${formatNumber(free.limits.agent_session)} conversaciones por voz con Reed al día`,
   `Hasta ${formatNumber(free.limits.ai_request)} respuestas, resúmenes y pistas al día`,
 ];
 

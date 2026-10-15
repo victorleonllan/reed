@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
           <li>Tu progreso de lectura: dónde quedaste en cada libro.</li>
           <li>Tus notas y los pasajes que marcas.</li>
           <li>
-            Las conversaciones que tienes conmigo, por escrito o por voz, y sus transcripciones.
+            Las preguntas que me haces y mis respuestas.
           </li>
           <li>Cuánto usas cada función, para aplicar los límites de tu plan.</li>
           <li>Si tienes {config.plans.pro.name}, el estado de tu suscripción. Los datos de tu tarjeta nunca pasan por mí.</li>
@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
           <li><strong>Clerk</strong>: inicio de sesión y cuenta.</li>
           <li><strong>Neon</strong>: base de datos donde viven tus libros, progreso, notas y conversaciones.</li>
           <li><strong>Vercel</strong>: aloja la aplicación.</li>
-          <li><strong>ElevenLabs</strong>: la voz con la que te leo y el agente con el que conversas.</li>
+          <li><strong>ElevenLabs</strong>: la voz con la que te leo y la IA que responde tus preguntas.</li>
           <li><strong>Stripe</strong>: cobro de {config.plans.pro.name}.</li>
           <li><strong>Resend</strong>: los correos que te envío (bienvenida y avisos de tu plan).</li>
           <li><strong>PostHog</strong>: estadísticas de uso para entender qué mejorar.</li>

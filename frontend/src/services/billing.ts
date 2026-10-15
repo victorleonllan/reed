@@ -35,15 +35,14 @@ export const PRO_PRICES: Record<BillingInterval, string> = {
 export const PRO_FEATURES = [
   'Te leo en voz alta cuatro veces más cada día',
   'Sube hasta 30 libros o documentos al día',
-  'Conversa conmigo por voz el doble de veces',
   'Pregúntame todo lo que quieras: hasta 500 respuestas diarias',
   'Sin apuro: cancelas cuando quieras',
 ];
 
-export const USAGE_LABELS: Record<UsageKind, string> = {
+// agent_session stays in UsageKind (the server still returns it) but is not shown: voice chat is gone.
+export const USAGE_LABELS: Partial<Record<UsageKind, string>> = {
   tts_chars: 'Lectura en voz alta',
   upload: 'Subidas',
-  agent_session: 'Conversaciones por voz',
   ai_request: 'Respuestas de Reed',
 };
 
