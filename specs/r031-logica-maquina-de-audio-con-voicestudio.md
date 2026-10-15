@@ -1,6 +1,7 @@
 # Spec R-031 — Máquina de audio: generar los libros con VoiceStudio
 
 > Estado: aplicado (15-oct-2026) — criterio 1 probado (sin `--catalog`/`--book` muestra el uso y sale con 1); falta de variables obligatorias sale con 1 antes de empezar (en `--dry-run` solo pide `DATABASE_URL`); criterio 3 por grep (sin `insert`/`update`/`delete`); `tsc` raíz + frontend y `lint` verdes. La corrida real contra la base y VoiceStudio queda en V11–V12.
+> Subida: superada por R-032 (Vercel Blob → Cloudflare R2, 15-oct-2026).
 > Capa: LÓGICA. `scripts/generate-audiobook.mts` (nuevo), `package.json` (solo `scripts`),
 > `.env.example` (solo el bloque de VoiceStudio), `README.md` (sección nueva),
 > `specs/R-PENDIENTES.md` (V11–V13 y una decisión).

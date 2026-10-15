@@ -81,6 +81,7 @@ referencia, nunca se modifica).
 | R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | aplicado (15-oct-2026) |
 | R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | aplicado (15-oct-2026) |
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
+| R-032 | LÓGICA | El audio pregenerado se sube a Cloudflare R2: Vercel Blob Hobby no alcanza (supera el almacenamiento de R-029/R-031) | diseñado (15-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
@@ -143,5 +144,15 @@ spec-fleet-cadena reed:R025 reed:R029 reed:R027+reed:R030+reed:R031 reed:R028
 La primera corrida se detuvo porque `spec-fleet` lee como dependencia todo `R-NNN` de la línea
 `Depende de:`, y «Lo usan R-027 y R-028» armaba un ciclo. Esas menciones pasaron a una línea
 `> Alimenta:` propia.
+
+### R-032 (15-oct-2026): de Vercel Blob a Cloudflare R2
+
+El `--dry-run` midió 3027 párrafos y ~1,9 GB por voz. Vercel Blob Hobby permite 1 GB y 2000
+subidas al mes, y bloquea Blob 30 días si se pasa. R2 da gratis 10 GB y un millón de
+escrituras. Va solo en su paso porque cambia dependencias.
+
+```
+spec-fleet-cadena reed:R032
+```
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).
