@@ -82,6 +82,7 @@ referencia, nunca se modifica).
 | R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | aplicado (15-oct-2026) |
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
 | R-032 | LÓGICA | El audio pregenerado se sube a Cloudflare R2: Vercel Blob Hobby no alcanza (supera el almacenamiento de R-029/R-031) | diseñado (15-oct-2026) |
+| R-033 | LÓGICA | Reed Pro deja de prometer conversación por voz (config, mensaje de límite, correo) | diseñado (15-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
@@ -152,7 +153,10 @@ subidas al mes, y bloquea Blob 30 días si se pasa. R2 da gratis 10 GB y un mill
 escrituras. Va solo en su paso porque cambia dependencias.
 
 ```
-spec-fleet-cadena reed:R032
+spec-fleet-cadena reed:R032 reed:R033
 ```
+
+R-033 cierra la addenda de R-026. No comparte archivos con R-032; va después solo porque R-032
+instala dependencias.
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).
