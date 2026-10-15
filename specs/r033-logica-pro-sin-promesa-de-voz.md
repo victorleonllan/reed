@@ -1,6 +1,6 @@
 # Spec R-033 — Reed Pro deja de prometer conversación por voz
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026) — `grep "por voz"` en los 3 archivos vacío, `plans.pro.limits` sin cambios, `tsc` raíz + frontend y `lint` verdes.
 > Capa: LÓGICA. `src/config.ts` (solo `plans.pro.features`), `src/lib/usage.ts` (solo
 > `LABELS`), `src/lib/emails.ts` (solo la línea de `agent_session` del correo de Pro).
 > Depende de: R-026.

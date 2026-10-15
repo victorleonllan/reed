@@ -51,7 +51,7 @@ export const config = {
       features: [
         "Te leo en voz alta cuatro veces más cada día",
         "Sube hasta 30 libros o documentos al día",
-        "Conversa conmigo por voz el doble de veces",
+        "Conversa conmigo el doble de veces",
         "Pregúntame todo lo que quieras: hasta 500 respuestas diarias",
         "Sin apuro: cancelas cuando quieras",
       ],

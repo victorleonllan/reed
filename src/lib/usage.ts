@@ -30,7 +30,7 @@ export function usageLimits(plan: PlanId): Record<UsageKind, { perUser: number; 
 const LABELS: Record<UsageKind, string> = {
   tts_chars: "lectura en voz alta",
   upload: "subidas",
-  agent_session: "conversaciones por voz",
+  agent_session: "conversaciones con Reed",
   ai_request: "respuestas de Reed",
 };
 

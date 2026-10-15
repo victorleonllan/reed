@@ -102,7 +102,7 @@ export function proActivatedEmail({ name }: { name?: string | null }): EmailCont
   const changes = [
     `te leo en voz alta hasta ${formatNumber(limits.tts_chars)} caracteres;`,
     `subes hasta ${formatNumber(limits.upload)} libros o documentos;`,
-    `conversamos por voz hasta ${formatNumber(limits.agent_session)} veces;`,
+    `conversamos hasta ${formatNumber(limits.agent_session)} veces;`,
     `me haces hasta ${formatNumber(limits.ai_request)} preguntas.`,
   ];
   const cancel = "Si algún día quieres cancelar, lo haces desde tu perfil, cuando quieras. Sin trámites.";

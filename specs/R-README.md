@@ -82,7 +82,7 @@ referencia, nunca se modifica).
 | R-030 | LÓGICA | `/api/tts` sirve primero el audio pregenerado, sin gastar ElevenLabs | aplicado (15-oct-2026) |
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
 | R-032 | LÓGICA | El audio pregenerado se sube a Cloudflare R2: Vercel Blob Hobby no alcanza (supera el almacenamiento de R-029/R-031) | aplicado (15-oct-2026) |
-| R-033 | LÓGICA | Reed Pro deja de prometer conversación por voz (config, mensaje de límite, correo) | diseñado (15-oct-2026) |
+| R-033 | LÓGICA | Reed Pro deja de prometer conversación por voz (config, mensaje de límite, correo) | aplicado (15-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 
