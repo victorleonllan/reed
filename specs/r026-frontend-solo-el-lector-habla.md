@@ -1,6 +1,7 @@
 # Spec R-026 — Solo el lector habla
 
-> Estado: diseñado (10-oct-2026).
+> Estado: aplicado con pendiente (15-oct-2026). Verificado: criterios 1, 2 y 4 (tsc raíz, tsc
+> frontend y lint en verde); el 3 falla solo en `src/config.ts` y `src/lib/usage.ts`, ver addenda.
 > Capa: FRONTEND. `frontend/src/components/reed/modes/CompanionMode.tsx`,
 > `frontend/src/components/reed/VoiceChat.tsx` (se borra), `frontend/src/services/voice.ts`
 > (se borra), `frontend/src/services/billing.ts`, `src/components/marketing/Pricing.tsx`,
@@ -59,3 +60,19 @@ queda como decisión abierta en `R-PENDIENTES.md`.
 3. `grep -rni "conversaciones por voz\|conversa conmigo por voz" frontend/src src` no devuelve
    nada.
 4. `npx tsc --noEmit && npx tsc --noEmit -p frontend && npm run lint` verde.
+
+## Bugs encontrados al aplicar (15-oct-2026)
+
+- **El criterio 3 no se cumple con los archivos declarados.** El grep también encuentra:
+  - `src/config.ts:38`, «Conversa conmigo por voz el doble de veces» en `plans.pro.features`.
+    `Pricing.tsx` muestra esa lista (`pro.features.map`), así que la landing **sigue prometiendo
+    voz** en la tarjeta de Reed Pro. No se tocó: `src/config.ts` es de R-025, que corre en paralelo
+    en la misma tanda.
+  - `src/lib/usage.ts:33`, la etiqueta «conversaciones por voz» del mensaje de límite del
+    servidor (capa LÓGICA, fuera de este spec).
+  Hace falta un spec LÓGICA chico que quite esa línea de `plans.pro.features` y decida qué hacer
+  con la etiqueta de `usage.ts`.
+- `USAGE_LABELS` pasó a `Partial<Record<UsageKind, string>>`: con `Record` completo no se puede
+  omitir `agent_session` sin romper el tipo, y así `PlanCard.tsx` sigue igual (salta las claves
+  sin etiqueta).
+
