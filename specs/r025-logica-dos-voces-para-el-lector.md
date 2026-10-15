@@ -2,7 +2,8 @@
 
 > Estado: diseñado (10-oct-2026).
 > Capa: LÓGICA. `src/config.ts`, `src/lib/elevenlabs.ts`, `src/app/api/tts/route.ts`.
-> Depende de: nada. Lo usan R-027 y R-028.
+> Depende de: nada.
+> Alimenta: R-027 y R-028.
 
 > **En una frase:** la API de voz (`POST /api/tts`) acepta elegir entre dos voces latinas,
 > Antonio y Mauricio, en vez de leer siempre con la única voz de `ELEVENLABS_VOICE_ID`.

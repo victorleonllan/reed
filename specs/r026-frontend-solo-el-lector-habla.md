@@ -1,7 +1,7 @@
 # Spec R-026 — Solo el lector habla
 
-> Estado: aplicado con pendiente (15-oct-2026). Verificado: criterios 1, 2 y 4 (tsc raíz, tsc
-> frontend y lint en verde); el 3 falla solo en `src/config.ts` y `src/lib/usage.ts`, ver addenda.
+> Estado: aplicado (15-oct-2026) — criterios 1, 2 y 4 verificados (tsc raíz, tsc frontend y
+> lint en verde); el 3 queda abierto solo en `src/config.ts` y `src/lib/usage.ts`, ver addenda.
 > Capa: FRONTEND. `frontend/src/components/reed/modes/CompanionMode.tsx`,
 > `frontend/src/components/reed/VoiceChat.tsx` (se borra), `frontend/src/services/voice.ts`
 > (se borra), `frontend/src/services/billing.ts`, `src/components/marketing/Pricing.tsx`,

@@ -4,7 +4,7 @@
 > Capa: LÓGICA. `scripts/generate-audiobook.mts` (nuevo), `package.json` (solo `scripts`),
 > `.env.example` (solo el bloque de VoiceStudio), `README.md` (sección nueva),
 > `specs/R-PENDIENTES.md` (V11–V13 y una decisión).
-> Depende de: R-029 (`audioKey`, `config.localTts`). No depende de R-030.
+> Depende de: R-029 (`audioKey`, `config.localTts`).
 
 > **En una frase:** un comando que corre en una máquina propia, lee los libros del catálogo,
 > genera el audio de cada párrafo con VoiceStudio y lo sube a la biblioteca de R-029.

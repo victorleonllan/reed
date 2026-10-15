@@ -3,7 +3,8 @@
 > Estado: diseñado (15-oct-2026).
 > Capa: LÓGICA. `package.json`, `package-lock.json` (solo `@vercel/blob`), `src/config.ts`
 > (solo `readerVoices` y `localTts`), `src/lib/audio-library.ts` (nuevo), `.env.example`.
-> Depende de: R-025 (`config.readerVoices`). Lo usan R-030 y R-031.
+> Depende de: R-025 (`config.readerVoices`).
+> Alimenta: R-030 y R-031.
 
 > **En una frase:** define dónde vive el audio de un párrafo ya generado (Vercel Blob, en una
 > ruta que se deduce del texto y la voz) para que el servidor y la máquina de audio lleguen al

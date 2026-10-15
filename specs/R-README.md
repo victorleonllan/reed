@@ -75,7 +75,7 @@ referencia, nunca se modifica).
 | R-023 | FRONTEND | Transición entre modos sin la línea del junco (modifica R-008) | aplicado (07-oct-2026) |
 | R-024 | FRONTEND | Hero con Reed de cuerpo completo y sin la línea del junco (modifica R-012) | aplicado (07-oct-2026) |
 | R-025 | LÓGICA | Dos voces para el lector (Antonio y Mauricio) en `/api/tts` | diseñado (10-oct-2026) |
-| R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | aplicado con pendiente (15-oct-2026): `src/config.ts` aún promete voz en Pro |
+| R-026 | FRONTEND | Solo el lector habla: el Compañero pierde la voz (supera R-015) | aplicado (15-oct-2026) — pendiente: `src/config.ts` aún promete voz en Pro |
 | R-027 | FRONTEND | Audio solo cuando lo pides: caché en el navegador y voz elegible | diseñado (10-oct-2026) |
 | R-028 | FRONTEND | Sesión de escucha planificada: 5, 15 o 30 min y voz antes de generar audio | diseñado (10-oct-2026) |
 | R-029 | LÓGICA | Biblioteca de audio pregenerado: clave por voz + texto en Vercel Blob | diseñado (15-oct-2026) |
@@ -126,18 +126,22 @@ compila en paralelo. R-028 usa archivos de R-027 y espera al paso 1.
 
 ### Tanda del 15-oct-2026 (audio pregenerado con VoiceStudio)
 
-Incluye la tanda del 10-oct, que sigue sin ejecutar: R-029 necesita `config.readerVoices` de
-R-025.
+Incluye la tanda del 10-oct: R-029 necesita `config.readerVoices` de R-025. R-026 ya quedó
+aplicado en la primera corrida (15-oct-2026).
 
 ```
-1  R-025 + R-026 + R-027
+1  R-025
 2  R-029            (solo: instala @vercel/blob y toca src/config.ts)
-3  R-028 + R-030
-4  R-031            (spec-fleet no lo junta con el paso 3)
+3  R-027 + R-030 + R-031
+4  R-028            (usa archivos de R-027)
 ```
 
 ```
-spec-fleet-cadena reed:R025+reed:R026+reed:R027 reed:R029 reed:R028+reed:R030 reed:R031
+spec-fleet-cadena reed:R025 reed:R029 reed:R027+reed:R030+reed:R031 reed:R028
 ```
+
+La primera corrida se detuvo porque `spec-fleet` lee como dependencia todo `R-NNN` de la línea
+`Depende de:`, y «Lo usan R-027 y R-028» armaba un ciclo. Esas menciones pasaron a una línea
+`> Alimenta:` propia.
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).

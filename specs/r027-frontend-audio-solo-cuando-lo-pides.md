@@ -4,7 +4,8 @@
 > Capa: FRONTEND. `frontend/src/services/api.ts` (solo `synthesizeSpeech`),
 > `frontend/src/services/readerVoices.ts` (nuevo), `frontend/src/services/audioCache.ts`
 > (nuevo), `frontend/src/components/reader/ListenBar.tsx` (solo `useParagraphVoice`).
-> Depende de: R-025 (la API acepta `voice`). Lo usa R-028.
+> Depende de: R-025 (la API acepta `voice`).
+> Alimenta: R-028.
 
 > **En una frase:** el motor de voz del lector genera audio solo para el párrafo que se pide,
 > guarda en el navegador lo ya generado para no pagarlo otra vez, y lee con la voz elegida.
