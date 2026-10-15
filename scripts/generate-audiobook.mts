@@ -5,15 +5,16 @@
 //   npm run audio:generate -- --book <documentId> --voice mauricio
 // Resumable: a paragraph whose file already exists is skipped, so after a cut just run it again.
 // Reads the database only (one select of documents); it never writes to it.
-// Needs .env / .env.local with DATABASE_URL, and (except --dry-run) BLOB_READ_WRITE_TOKEN and
-// REED_AUDIO_BASE_URL. VOICESTUDIO_URL defaults to http://127.0.0.1:3900.
+// Needs .env / .env.local with DATABASE_URL, and (except --dry-run) R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+// R2_SECRET_ACCESS_KEY, R2_BUCKET and REED_AUDIO_BASE_URL (R-032: the library lives in Cloudflare R2).
+// VOICESTUDIO_URL defaults to http://127.0.0.1:3900.
+import { AwsClient } from "aws4fetch";
 import { config as loadEnv } from "dotenv";
 import { and, eq, inArray } from "drizzle-orm";
 import { parseArgs } from "node:util";
 
 loadEnv({ path: [".env.local", ".env"], quiet: true });
 
-const { put } = await import("@vercel/blob");
 const { getDb, schema } = await import("../src/db");
 const { CATALOG_USER_ID } = await import("../src/db/schema");
 const { config } = await import("../src/config");
@@ -62,13 +63,23 @@ const voice = args.voice as ReaderVoice;
 const limit = args.limit === undefined ? Infinity : Number(args.limit);
 if (limit !== Infinity && (!Number.isInteger(limit) || limit < 1)) fail(`--limit must be a positive integer.\n\n${USAGE}`);
 
-const required = dryRun ? ["DATABASE_URL"] : ["DATABASE_URL", "BLOB_READ_WRITE_TOKEN", "REED_AUDIO_BASE_URL"];
+const R2_ENV = ["R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET"];
+const required = dryRun ? ["DATABASE_URL"] : ["DATABASE_URL", ...R2_ENV, "REED_AUDIO_BASE_URL"];
 const missing = required.filter((name) => !process.env[name]?.trim());
 if (missing.length) fail(`Missing ${missing.join(", ")} in .env.local or .env. See .env.example and the README.`);
 
 const voiceStudioUrl = (process.env.VOICESTUDIO_URL?.trim() || "http://127.0.0.1:3900").replace(/\/+$/, "");
 const voiceStudioKey = process.env.VOICESTUDIO_API_KEY?.trim();
 const canCheckLibrary = Boolean(process.env.REED_AUDIO_BASE_URL?.trim());
+const r2 = dryRun
+  ? null
+  : new AwsClient({
+      accessKeyId: process.env.R2_ACCESS_KEY_ID!.trim(),
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!.trim(),
+      service: "s3",
+      region: "auto",
+    });
+const r2BucketUrl = `https://${process.env.R2_ACCOUNT_ID?.trim()}.r2.cloudflarestorage.com/${process.env.R2_BUCKET?.trim()}`;
 
 async function existsInLibrary(text: string): Promise<boolean> {
   const url = libraryAudioUrl(voice, text);
@@ -97,13 +108,24 @@ async function synthesize(text: string): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
+// The key never changes content (a new voice or engine bumps libraryVersion), so it caches forever.
+async function upload(key: string, audio: ArrayBuffer): Promise<void> {
+  const res = await r2!.fetch(`${r2BucketUrl}/${key}`, {
+    method: "PUT",
+    headers: { "Content-Type": "audio/mpeg", "Cache-Control": "public, max-age=31536000, immutable" },
+    body: audio,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  if (res.status !== 200) throw new Error(`R2 ${res.status}: ${(await res.text()).slice(0, 200)}`);
+}
+
 // One attempt plus one retry; the caller logs the paragraph and moves on if both fail.
 async function generate(text: string): Promise<void> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const audio = await synthesize(text);
-      await put(audioKey(voice, text), audio, { access: "public", addRandomSuffix: false, contentType: "audio/mpeg" });
+      await upload(audioKey(voice, text), audio);
       return;
     } catch (err) {
       lastError = err;

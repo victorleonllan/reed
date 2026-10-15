@@ -1,6 +1,6 @@
 # Spec R-032 — El audio pregenerado vive en Cloudflare R2, no en Vercel Blob
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `grep @vercel/blob` vacío y `aws4fetch` en dependencies; `--catalog --dry-run` sale 0 solo con `DATABASE_URL` (3027 párrafos, 1 747 267 caracteres); corrida real sin `R2_*` sale 1 nombrando las cinco variables antes de VoiceStudio; `tsc` raíz + frontend y `lint` verdes. Subida real a R2 pendiente (V12).
 > Capa: LÓGICA. `scripts/generate-audiobook.mts` (solo la subida), `package.json` y
 > `package-lock.json` (sale `@vercel/blob`, entra `aws4fetch`), `.env.example` (bloque de la
 > biblioteca), `README.md` (sección «Máquina de audio»), `specs/R-PENDIENTES.md`.

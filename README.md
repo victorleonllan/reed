@@ -115,7 +115,7 @@ marca de Gutenberg. Para agregar o restaurar libros, edita `CATALOG` en
 
 El audio del lector para los libros del catálogo se puede generar **una vez**, gratis, en una
 máquina propia con [VoiceStudio](https://github.com/debpalash/VoiceStudio), y servirse a todos
-los lectores sin gastar créditos de ElevenLabs. Cada párrafo queda en Vercel Blob en una ruta
+los lectores sin gastar créditos de ElevenLabs. Cada párrafo queda en un bucket de Cloudflare R2 en una ruta
 que se calcula de la voz y el texto (`src/lib/audio-library.ts`), y `/api/tts` lo busca ahí
 antes de llamar a ElevenLabs. La máquina puede ser un PC con Windows (GPU NVIDIA) o un Mac con
 Apple Silicon; el script habla con VoiceStudio por HTTP, así que también puede usar el
@@ -127,18 +127,23 @@ VoiceStudio de otra máquina (por ejemplo, por Tailscale).
 2. **Crea dos perfiles de voz** llamados **exactamente** `Reed Antonio` y `Reed Mauricio`, con
    el diseño de voz o clonando una grabación **con permiso** de quien habla. El nombre es lo
    que el script le pide a VoiceStudio (`localProfile` en `src/config.ts`).
-3. **Crea el almacén de audio.** Vercel → Storage → Blob → crea un store **público**. Copia el
-   token a `BLOB_READ_WRITE_TOKEN` en el `.env.local` de la máquina de audio, y la URL pública
-   del store a `REED_AUDIO_BASE_URL` en ese `.env.local` **y** en las variables de Vercel. La
-   máquina de audio también necesita `DATABASE_URL` (solo lee los libros; no escribe en la base).
-   Si VoiceStudio tiene clave, ponla en `VOICESTUDIO_API_KEY`.
+3. **Crea el almacén de audio.** Cloudflare → R2 → crea el bucket `reed-audio` y activa su
+   acceso público (Settings → Public access: URL `r2.dev`). En R2 → Manage API tokens, crea un
+   token con **Object Read & Write solo para ese bucket**. En el `.env.local` de la máquina de
+   audio pon las cinco variables: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+   `R2_BUCKET` y `REED_AUDIO_BASE_URL` (la URL pública del bucket). `REED_AUDIO_BASE_URL` va
+   **también** en las variables de Vercel. La máquina de audio también necesita `DATABASE_URL`
+   (solo lee los libros; no escribe en la base). Si VoiceStudio tiene clave, ponla en
+   `VOICESTUDIO_API_KEY`. Por qué R2 y no Vercel Blob (R-032): el catálogo son ~3000 párrafos y
+   ~1,9 GB por voz; Blob Hobby permite 1 GB y 2000 subidas al mes, y R2 da gratis 10 GB y un
+   millón de escrituras.
 4. **Prueba antes de la corrida completa:**
    - `npm run audio:generate -- --catalog --dry-run` — cuenta párrafos, caracteres, cuántos ya
      existen y los créditos de ElevenLabs que se evitan. No llama a VoiceStudio ni sube nada.
-   - `npm run audio:generate -- --catalog --limit 5` — genera 5 párrafos. Escúchalos en el Blob.
+   - `npm run audio:generate -- --catalog --limit 5` — genera 5 párrafos. Escúchalos en el bucket.
    - `npm run audio:generate -- --catalog` — la corrida completa (una voz por corrida; la otra
      con `--voice mauricio`). Para un libro solo: `--book <documentId>`.
-5. **Si se corta**, vuelve a correr el mismo comando: los párrafos que ya están en el Blob se
+5. **Si se corta**, vuelve a correr el mismo comando: los párrafos que ya están en el bucket se
    saltan, y un párrafo que falló dos veces se reintenta en la siguiente corrida (el comando
    termina con código 1 cuando hubo fallidos). **Para regenerar todo** (otro motor, perfiles
    nuevos), sube `localTts.libraryVersion` en `src/config.ts` (`v1` → `v2`): las rutas

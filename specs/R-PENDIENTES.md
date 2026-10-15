@@ -26,8 +26,8 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
   el estimado (`CHARS_PER_MINUTE = 890`) y ajustar la constante si se desvía más de 15 %.
 - **V11** (R-031) — `npm run audio:generate -- --catalog --dry-run`: anotar párrafos,
   caracteres y créditos de ElevenLabs que se evitarían.
-- **V12** (R-031) — `npm run audio:generate -- --catalog --limit 5`: los 5 mp3 aparecen en el
-  Blob y suenan bien en español.
+- **V12** (R-031, R-032) — `npm run audio:generate -- --catalog --limit 5`: los 5 mp3 aparecen
+  en el bucket R2 y suenan bien en español.
 - **V13** (R-030) — en el lector, un párrafo generado responde `X-Reed-Audio: library` y el
   uso de ElevenLabs no sube.
 
@@ -40,8 +40,11 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **Correo de soporte y remitentes** (`src/config.ts`): `hola@reed.app` es un placeholder.
 - **Términos y privacidad** (R-017): son un borrador; revisión legal antes de cobrar en serio.
 - **Dominio** del fork y `NEXT_PUBLIC_SITE_URL`.
-- **Espacio del Blob** (R-031): medir el tamaño real de los mp3 en V12 y proyectarlo a los 5
-  libros antes de generar la segunda voz; revisar el límite de Blob del plan de Vercel.
+- **Dominio para el audio** (R-032): Cloudflare dice que la URL `r2.dev` «is rate-limited and
+  should only be used for development purposes» y no tiene caché; en producción pide un dominio
+  propio en Cloudflare para el bucket `reed-audio`. Va junto con la decisión del dominio del
+  fork. (Cierra la decisión «espacio del Blob» de R-031: R2 aguanta las dos voces, ~3,8 GB de
+  10 GB gratis.)
 
 ## Mejoras detectadas, sin spec
 
