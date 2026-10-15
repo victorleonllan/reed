@@ -1,6 +1,6 @@
 # Spec R-030 — `/api/tts` sirve primero el audio pregenerado
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026) — tsc (raíz y frontend) y lint verdes; criterios 1-3 pendientes de verificar en ejecución (sin servidor ni Blob en esta tanda).
 > Capa: LÓGICA. `src/app/api/tts/route.ts`.
 > Depende de: R-025 (`voice` en el body), R-029 (`libraryAudioUrl`).
 
