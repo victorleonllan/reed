@@ -1,6 +1,8 @@
 # Spec R-039 — Precios y planes: Básico, Pro y Biblioteca en la landing y en la app
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: grep de «MXN|al día» vacío, `tsc -p frontend` y
+> `npm run lint` verdes; `tsc` raíz verde en los archivos del spec (el único error está en
+> `scripts/generate-audiobook.mts`, en curso de otro spec).
 > Capa: FRONTEND. `src/components/marketing/Pricing.tsx`, `frontend/src/services/billing.ts`,
 > `frontend/src/components/billing/PlanCard.tsx`, `frontend/src/components/billing/UpgradeModal.tsx`,
 > `frontend/src/components/billing/CheckoutReturn.tsx` (solo `isProPlan` → `hasPaidPlan` y la

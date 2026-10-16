@@ -3,18 +3,18 @@ import { useBackendAuth } from '../auth/ClerkAuthProvider';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
 import {
-  BillingInterval,
+  BOOKS_LABEL,
   PLAN_EVENT,
   PLAN_NAMES,
-  PRO_PRICES,
+  PLAN_PRICES,
   PlanSummary,
   USAGE_LABELS,
   UsageKind,
   UsageSummary,
   getUsage,
-  isProPlan,
+  hasPaidPlan,
+  openPlanChooser,
   openPortal,
-  startCheckout,
 } from '../../services/billing';
 
 const STATUS_LABELS: Record<PlanSummary['status'], string | null> = {
@@ -36,12 +36,11 @@ function dateLine(plan: PlanSummary): string | null {
   return null;
 }
 
-/** Plan, today's usage and the way to pay or manage Reed Pro. Hidden without a backend session (demo). */
+/** Plan, saved books, this month's usage and the way to choose or manage a plan. Hidden without a backend session (demo). */
 export const PlanCard: React.FC = () => {
   const { backendSignedIn } = useBackendAuth();
   const [summary, setSummary] = useState<UsageSummary | null>(null);
   const [failed, setFailed] = useState(false);
-  const [interval, setBillingInterval] = useState<BillingInterval>('month');
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
@@ -77,10 +76,8 @@ export const PlanCard: React.FC = () => {
       ) : (
         <PlanDetails
           summary={summary}
-          interval={interval}
-          onInterval={setBillingInterval}
           redirecting={redirecting}
-          onUpgrade={() => void go(() => startCheckout(interval))}
+          onChoose={openPlanChooser}
           onManage={() => void go(openPortal)}
         />
       )}
@@ -88,66 +85,63 @@ export const PlanCard: React.FC = () => {
   );
 };
 
+const UsageBar: React.FC<{ label: string; used: number; limit: number }> = ({ label, used, limit }) => (
+  <ProgressBar
+    label={`${label} · ${formatNumber(used)} de ${formatNumber(limit)}`}
+    percent={limit > 0 ? Math.round((used / limit) * 100) : 0}
+  />
+);
+
 const PlanDetails: React.FC<{
   summary: UsageSummary;
-  interval: BillingInterval;
-  onInterval: (interval: BillingInterval) => void;
   redirecting: boolean;
-  onUpgrade: () => void;
+  onChoose: () => void;
   onManage: () => void;
-}> = ({ summary, interval, onInterval, redirecting, onUpgrade, onManage }) => {
-  const { plan, usage } = summary;
-  const pro = isProPlan(plan);
+}> = ({ summary, redirecting, onChoose, onManage }) => {
+  const { plan, usage, books } = summary;
+  const paid = hasPaidPlan(plan);
   const status = STATUS_LABELS[plan.status];
   const date = dateLine(plan);
+  // Kinds with no allowance on this plan (e.g. read-aloud without TTS_FALLBACK) would only show «0 de 0».
+  const kinds = (Object.keys(USAGE_LABELS) as UsageKind[]).filter((kind) => usage[kind] && usage[kind].limit > 0);
 
   return (
     <>
       <div className="flex items-baseline gap-3 flex-wrap">
-        <p className="font-serif text-2xl text-ink">{pro ? PLAN_NAMES.pro : PLAN_NAMES.free}</p>
+        <p className="font-serif text-2xl text-ink">{PLAN_NAMES[paid ? plan.plan : 'free']}</p>
         {status && <p className={`text-sm ${plan.status === 'past_due' ? 'text-danger' : 'text-ink-muted'}`}>{status}</p>}
       </div>
       {date && <p className="text-sm text-ink-muted mt-1">{date}</p>}
 
-      <p className="text-xs font-bold text-ink-muted mt-6 mb-3">Uso de hoy</p>
-      <div className="space-y-4">
-        {(Object.keys(USAGE_LABELS) as UsageKind[]).filter((kind) => usage[kind]).map((kind) => {
-          const { used, limit } = usage[kind];
-          return (
-            <ProgressBar
-              key={kind}
-              label={`${USAGE_LABELS[kind]} · ${formatNumber(used)} de ${formatNumber(limit)}`}
-              percent={limit > 0 ? Math.round((used / limit) * 100) : 0}
-            />
-          );
-        })}
-      </div>
+      {books && books.limit > 0 && (
+        <div className="mt-6">
+          <ProgressBar
+            label={`${BOOKS_LABEL} · ${formatNumber(books.used)} de ${formatNumber(books.limit)} ${books.limit === 1 ? 'libro' : 'libros'}`}
+            percent={Math.round((books.used / books.limit) * 100)}
+          />
+        </div>
+      )}
+
+      {kinds.length > 0 && (
+        <>
+          <p className="text-xs font-bold text-ink-muted mt-6 mb-3">Uso de este mes</p>
+          <div className="space-y-4">
+            {kinds.map((kind) => (
+              <UsageBar key={kind} label={USAGE_LABELS[kind] ?? kind} used={usage[kind].used} limit={usage[kind].limit} />
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="mt-6">
-        {pro ? (
-          <Button variant="outline" loading={redirecting} onClick={onManage}>Administrar suscripción</Button>
+        {paid ? (
+          <Button variant="outline" loading={redirecting} onClick={onManage}>Gestionar suscripción</Button>
         ) : (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div role="radiogroup" aria-label="Forma de pago" className="inline-flex rounded-md border border-line p-0.5 self-start">
-              {(['month', 'year'] as BillingInterval[]).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={interval === option}
-                  onClick={() => onInterval(option)}
-                  className={`px-3 py-1.5 text-[13px] rounded-sm font-sans focus-ring transition-colors duration-states ${
-                    interval === option ? 'bg-paper-sunk text-ink font-bold' : 'text-ink-muted hover:text-ink'
-                  }`}
-                >
-                  {option === 'month' ? 'Mensual' : 'Anual'}
-                </button>
-              ))}
-            </div>
-            <Button variant="primary" loading={redirecting} onClick={onUpgrade}>Mejorar a Reed Pro</Button>
-          </div>
+          <>
+            <Button variant="primary" onClick={onChoose}>Elegir plan</Button>
+            <p className="text-xs text-ink-muted mt-2">Desde {PLAN_PRICES.basico.month}. Cancelas cuando quieras.</p>
+          </>
         )}
-        {!pro && <p className="text-xs text-ink-muted mt-2">{PRO_PRICES[interval]}. Cancelas cuando quieras.</p>}
       </div>
     </>
   );

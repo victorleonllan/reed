@@ -8,43 +8,81 @@ export type UsageKind = 'tts_chars' | 'upload' | 'agent_session' | 'ai_request';
 export type PlanStatus = 'active' | 'past_due' | 'canceled' | 'none';
 export type BillingInterval = 'month' | 'year';
 
+export type PlanId = 'free' | 'basico' | 'pro' | 'biblioteca';
+export type PaidPlanId = Exclude<PlanId, 'free'>;
+
 export interface PlanSummary {
-  plan: 'free' | 'pro';
+  plan: PlanId;
   status: PlanStatus;
   renewsAt: string | null; // ISO
 }
 
 export interface UsageSummary {
   usage: Record<UsageKind, { used: number; limit: number }>;
+  // Own books kept stored vs. the plan's slots (R-035).
+  books: { used: number; limit: number };
   plan: PlanSummary;
 }
 
-// Same rule as isPro() on the server: past_due keeps Pro while Stripe retries the charge.
-export const isProPlan = (plan: PlanSummary) =>
-  plan.plan === 'pro' && (plan.status === 'active' || plan.status === 'past_due');
+// Same rule as activePlan() on the server: past_due keeps the plan while Stripe retries the charge.
+export const hasPaidPlan = (plan: PlanSummary) =>
+  plan.plan !== 'free' && (plan.status === 'active' || plan.status === 'past_due');
 
 // ---------- fixed copy, aligned with config.plans in src/config.ts ----------
 
-export const PLAN_NAMES = { free: 'Gratis', pro: 'Reed Pro' } as const;
+export const PAID_PLANS: readonly PaidPlanId[] = ['basico', 'pro', 'biblioteca'];
 
-export const PRO_PRICES: Record<BillingInterval, string> = {
-  month: '$99 MXN al mes',
-  year: '$990 MXN al año',
+export const PLAN_NAMES: Record<PlanId, string> = {
+  free: 'Sin plan',
+  basico: 'Reed Básico',
+  pro: 'Reed Pro',
+  biblioteca: 'Reed Biblioteca',
 };
 
-export const PRO_FEATURES = [
-  'Te leo en voz alta cuatro veces más cada día',
-  'Sube hasta 30 libros o documentos al día',
-  'Pregúntame todo lo que quieras: hasta 500 respuestas diarias',
-  'Sin apuro: cancelas cuando quieras',
-];
+export const PLAN_PRICES: Record<PaidPlanId, Record<BillingInterval, string>> = {
+  basico: { month: 'USD 1 / mes', year: 'USD 10 / año' },
+  pro: { month: 'USD 10 / mes', year: 'USD 100 / año' },
+  biblioteca: { month: 'USD 25 / mes', year: 'USD 250 / año' },
+};
+
+export const PLAN_FEATURES: Record<PaidPlanId, readonly string[]> = {
+  basico: [
+    'Lee y escucha los libros de Reed',
+    'Guarda 1 libro tuyo',
+    '30 preguntas o resúmenes al mes',
+    '10 conversaciones conmigo al mes',
+  ],
+  pro: [
+    'Te leo tus propios libros con mi voz',
+    'Guarda 3 libros tuyos',
+    '300 preguntas o resúmenes al mes',
+    '60 conversaciones conmigo al mes',
+    'Sin apuro: cancelas cuando quieras',
+  ],
+  biblioteca: [
+    'Te leo tus propios libros con mi voz',
+    'Guarda 20 libros tuyos',
+    '1000 preguntas o resúmenes al mes',
+    '200 conversaciones conmigo al mes',
+    'Sin apuro: cancelas cuando quieras',
+  ],
+};
+
+// One line per plan for the upgrade modal, taken from PLAN_FEATURES.
+export const PLAN_SUMMARIES: Record<PaidPlanId, string> = {
+  basico: 'Guarda 1 libro tuyo y pregúntame 30 veces al mes.',
+  pro: 'Te leo tus propios libros con mi voz. Guarda 3.',
+  biblioteca: 'Te leo tus propios libros con mi voz. Guarda 20.',
+};
 
 // agent_session stays in UsageKind (the server still returns it) but is not shown: voice chat is gone.
 export const USAGE_LABELS: Partial<Record<UsageKind, string>> = {
-  tts_chars: 'Lectura en voz alta',
-  upload: 'Subidas',
-  ai_request: 'Respuestas de Reed',
+  tts_chars: 'Lectura en voz alta al mes',
+  upload: 'Subidas al mes',
+  ai_request: 'Respuestas de Reed al mes',
 };
+
+export const BOOKS_LABEL = 'Libros guardados';
 
 // ---------- calls ----------
 
@@ -69,16 +107,23 @@ async function goToStripe(path: string, body?: unknown): Promise<boolean> {
     return true;
   } catch (err) {
     if (err instanceof ApiError && err.status === 503) toast(PAYMENTS_OFF);
-    // 409 «Ya tienes Reed Pro.» / 404 «Todavía no tienes una suscripción.»: plain notices, not errors.
+    // 409 «Ya tienes un plan.» / 404 «Todavía no tienes una suscripción.»: plain notices, not errors.
     else if (err instanceof ApiError && (err.status === 409 || err.status === 404)) toast(err.message);
     else toast.error(err instanceof ApiError && err.status < 500 ? err.message : REDIRECT_FAILED);
     return false;
   }
 }
 
-export function startCheckout(interval: BillingInterval) {
-  track('checkout_started', { interval });
-  return goToStripe('/api/stripe/create-checkout', { interval });
+export function startCheckout(plan: PaidPlanId, interval: BillingInterval) {
+  track('checkout_started', { plan, interval });
+  return goToStripe('/api/stripe/create-checkout', { plan, interval });
+}
+
+/** Fired by «Elegir plan» so UpgradeModal (mounted in App) opens with the plan options. */
+export const CHOOSE_PLAN_EVENT = 'reed:choose-plan';
+
+export function openPlanChooser() {
+  window.dispatchEvent(new Event(CHOOSE_PLAN_EVENT));
 }
 
 export function openPortal() {

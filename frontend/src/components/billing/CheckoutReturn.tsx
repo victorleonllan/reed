@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useBackendAuth } from '../auth/ClerkAuthProvider';
 import { clerkEnabled } from '../../lib/clerkEnv';
-import { getUsage, isProPlan, startCheckout } from '../../services/billing';
+import { PAID_PLANS, getUsage, hasPaidPlan, startCheckout } from '../../services/billing';
 
 const QUERY_KEYS = ['checkout', 'plan', 'interval'];
 const RETRIES = 3;
@@ -17,12 +17,12 @@ function clearQuery() {
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-// The Stripe webhook can land a few seconds after the redirect: ask again until the plan is Pro.
+// The Stripe webhook can land a few seconds after the redirect: ask again until the plan is paid.
 async function refreshUntilPro() {
   for (let attempt = 0; attempt < RETRIES; attempt++) {
     await wait(RETRY_MS);
     try {
-      if (isProPlan((await getUsage()).plan)) return;
+      if (hasPaidPlan((await getUsage()).plan)) return;
     } catch {
       // keep trying; the profile reloads the plan on its own anyway
     }
@@ -30,8 +30,8 @@ async function refreshUntilPro() {
 }
 
 /**
- * Reads the URL once on load: back from Stripe (?checkout=ok|cancelado) or coming from the Pro
- * button on the landing (?plan=pro&interval=month|year). Renders nothing.
+ * Reads the URL once on load: back from Stripe (?checkout=ok|cancelado) or coming from a plan
+ * button on the landing (?plan=basico|pro|biblioteca&interval=month|year). Renders nothing.
  */
 export const CheckoutReturn: React.FC = () => {
   const { backendSignedIn } = useBackendAuth();
@@ -41,8 +41,8 @@ export const CheckoutReturn: React.FC = () => {
     if (handled.current) return;
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get('checkout');
-    const wantsPro = params.get('plan') === 'pro';
-    if (!checkout && !wantsPro) {
+    const wantedPlan = PAID_PLANS.find((plan) => plan === params.get('plan'));
+    if (!checkout && !wantedPlan) {
       handled.current = true;
       return;
     }
@@ -58,8 +58,8 @@ export const CheckoutReturn: React.FC = () => {
       toast('No se hizo ningún cobro.');
     }
 
-    if (wantsPro) {
-      if (backendSignedIn) void startCheckout(params.get('interval') === 'year' ? 'year' : 'month');
+    if (wantedPlan) {
+      if (backendSignedIn) void startCheckout(wantedPlan, params.get('interval') === 'year' ? 'year' : 'month');
       else toast('Los pagos todavía no están activos.');
     }
   }, [backendSignedIn]);
