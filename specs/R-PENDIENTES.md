@@ -69,6 +69,11 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **Agente por libro al subir** (R-026): sin voz en el Compañero, el agente que se crea por cada
   libro subido ya no se usa. Dejar de crearlo ahorra ~1 minuto por subida; es un spec LÓGICA.
   Sacar también `@elevenlabs/react` del `package.json` del frontend.
+  Revisado el 15-oct-2026: `frontend/src` tampoco llama `/api/documents/[id]/signed-url` ni
+  `/api/companion/signed-url`, así que esas rutas también sobran.
+- **Texto sin ElevenLabs** (15-oct-2026): explicar, resumir y test (`/api/ai/*` → `askReed`) son
+  el único uso real que queda de ElevenLabs. Propuesta: Claude Haiku 5.5 llamado directo, sin el
+  cobro por mensaje del agente. Espera una clave de API de Anthropic para Reed.
 - **Costo de ElevenLabs** (medido el 10-oct-2026): ~390 créditos por minuto de audio
   (`eleven_multilingual_v2`), ~19 por respuesta escrita. El tope Pro de 20 000 caracteres/día
   cuesta ~USD 44/mes si se usa entero.
