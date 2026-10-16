@@ -1,6 +1,6 @@
 # Spec R-041 — Reed se instala en el celular como app (PWA)
 
-> Estado: pendiente.
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend`, `npm run lint` y el build del frontend en verde; el HTML de `/app` enlaza el manifiesto y el `apple-touch-icon`. La instalación en el celular queda para V18.
 > Capa: FRONTEND. `frontend/index.html`, `frontend/src/main.tsx`, `public/manifest.webmanifest`
 > (nuevo), `public/sw.js` (nuevo), `public/pwa/` (íconos nuevos).
 > Depende de: R-005 (la app vive en `/app`).

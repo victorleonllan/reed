@@ -39,6 +39,9 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
   voz»; `--queue` lo genera, sube el manifiesto y al recargar el lector usa la voz de Reed.
 - **V17** (R-037) — `--prune` sin `--yes` después de borrar un libro: lista sus claves y no
   borra nada.
+- **V18** (R-041) — En el celular, `https://reed-alpha.vercel.app/app`: Android ofrece «Instalar
+  app», iPhone (Safari → Compartir) «Agregar a pantalla de inicio»; Reed abre sin barra del
+  navegador, con su ícono, y el acceso con Clerk funciona dentro de la app instalada.
 
 ## Decisiones abiertas de Victor
 
