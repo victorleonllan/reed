@@ -17,7 +17,7 @@ function voiceIdFor(voice: ReaderVoice): string {
 
 const LIBRARY_TIMEOUT_MS = 3000;
 
-// Pre-generated audio for this voice and text (R-029/R-030), or null to fall back to ElevenLabs.
+// Pre-generated audio for this voice and text (R-029/R-030), or null on a miss.
 // A miss (404) is expected; any other status or a network error is logged and also falls back.
 async function fetchLibraryAudio(voice: ReaderVoice, text: string): Promise<Response | null> {
   const url = libraryAudioUrl(voice, text);
@@ -33,9 +33,10 @@ async function fetchLibraryAudio(voice: ReaderVoice, text: string): Promise<Resp
   return null;
 }
 
-// POST { text, voice? } -> audio/mpeg of the text read aloud by ElevenLabs. `voice` is a key of
+// POST { text, voice? } -> audio/mpeg of the text read aloud. `voice` is a key of
 // config.readerVoices (default config.defaultReaderVoice). Signed-in users only. Serves the
-// pre-generated library first (no usage counted); otherwise ElevenLabs, which counts toward TTS limits.
+// pre-generated library first (no usage counted). On a miss: ElevenLabs (counts toward TTS limits)
+// only when TTS_FALLBACK=elevenlabs; otherwise 404 { code: "audio_not_generated" }.
 export async function POST(request: Request) {
   let text: unknown;
   let voice: unknown;
@@ -64,6 +65,15 @@ export async function POST(request: Request) {
       return new Response(library.body, {
         headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store", "X-Reed-Audio": "library" },
       });
+    }
+
+    // R-038: ElevenLabs only reads paragraphs missing from the library when explicitly enabled.
+    // Otherwise the reader falls back to the browser voice; no usage counted, no credits spent.
+    if (process.env.TTS_FALLBACK !== "elevenlabs") {
+      return Response.json(
+        { error: "Este párrafo todavía no tiene mi voz.", code: "audio_not_generated" },
+        { status: 404 },
+      );
     }
 
     await consumeUsage(userId, "tts_chars", input.length);

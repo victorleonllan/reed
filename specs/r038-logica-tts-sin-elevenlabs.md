@@ -1,6 +1,6 @@
 # Spec R-038 — `/api/tts` deja de usar ElevenLabs salvo que se active a mano
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit && npx tsc --noEmit -p frontend && npm run lint` verde; sin `TTS_FALLBACK=elevenlabs` el 404 sale antes de `consumeUsage` y `textToSpeech` (lectura del código).
 > Capa: LÓGICA. `src/app/api/tts/route.ts`, `.env.example` (una variable).
 > Depende de: R-034.
 > Alimenta: R-040.
