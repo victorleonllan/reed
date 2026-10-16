@@ -18,10 +18,17 @@ export function setAuthTokenGetter(getter: TokenGetter | null) {
 export const isBackendSession = () => getToken !== null;
 
 export class ApiError extends Error {
-  constructor(readonly status: number, message: string) {
+  /** `code` is the machine-readable reason some routes add to the error body (e.g. `book_slots_full`). */
+  constructor(readonly status: number, message: string, readonly code?: string) {
     super(message);
   }
 }
+
+/** /api/tts has no pre-generated audio for this paragraph yet (R-038): read it with the browser voice. */
+export class AudioNotGeneratedError extends ApiError {}
+
+/** The user already keeps as many books as their plan allows (R-035): they must delete one first. */
+export class BookSlotsFullError extends ApiError {}
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
@@ -32,9 +39,10 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     const message = data?.error || `Error ${res.status}`;
+    const code = typeof data?.code === 'string' ? data.code : undefined;
     // Daily limit reached: UpgradeModal (mounted in App) listens and offers Reed Pro calmly.
     if (res.status === 429) window.dispatchEvent(new CustomEvent('reed:limit', { detail: { message } }));
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, code);
   }
   return res;
 }
@@ -42,7 +50,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 const postJson = async <T,>(path: string, body: unknown): Promise<T> =>
   (await apiFetch(path, { method: 'POST', body: JSON.stringify(body) })).json();
 
-const REED_LIMIT_MESSAGE = 'Por hoy llegamos al límite de respuestas de Reed. Vuelve mañana y seguimos.';
+const REED_LIMIT_MESSAGE = 'Llegamos al límite de respuestas de Reed de este mes.';
 const REED_FAILED_MESSAGE = 'Reed no pudo responder en este momento. Inténtalo de nuevo en unos segundos.';
 
 const reedErrorMessage = (err: unknown) =>
@@ -116,13 +124,22 @@ export async function generateQuiz(chapterTitle: string, paragraphsText: string)
 
 /**
  * MP3 of the text in the chosen reader voice, as an object URL. Served from the browser cache when
- * this voice already read this text, so it is generated (and paid) only once. Throws ApiError (429 = daily limit).
+ * this voice already read this text, so it is generated (and paid) only once. Throws ApiError (429 = limit),
+ * or AudioNotGeneratedError when the paragraph has no pre-generated audio yet.
  */
 export async function synthesizeSpeech(text: string, voice: ReaderVoice): Promise<string> {
   const clipped = text.slice(0, 2500);
   const cached = await getCachedAudio(voice, clipped);
   if (cached) return cached;
-  const res = await apiFetch('/api/tts', { method: 'POST', body: JSON.stringify({ text: clipped, voice }) });
+  let res: Response;
+  try {
+    res = await apiFetch('/api/tts', { method: 'POST', body: JSON.stringify({ text: clipped, voice }) });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404 && err.code === 'audio_not_generated') {
+      throw new AudioNotGeneratedError(err.status, err.message, err.code);
+    }
+    throw err;
+  }
   const blob = await res.blob();
   await putCachedAudio(voice, clipped, blob);
   return URL.createObjectURL(blob);
@@ -198,13 +215,34 @@ export async function listLibrary(): Promise<Book[]> {
   return documents.filter((d) => d.status === 'ready').map(toBook);
 }
 
+/** Throws BookSlotsFullError (with the server's message) when the plan's book slots are full. */
 export async function uploadBook(file: File, title: string, author: string): Promise<Book> {
   const form = new FormData();
   form.append('file', file);
   form.append('title', title);
   if (author) form.append('author', author);
-  const { document } = await (await apiFetch('/api/documents', { method: 'POST', body: form })).json() as { document: ApiDocument };
+  let res: Response;
+  try {
+    res = await apiFetch('/api/documents', { method: 'POST', body: form });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 409 && err.code === 'book_slots_full') {
+      throw new BookSlotsFullError(err.status, err.message, err.code);
+    }
+    throw err;
+  }
+  const { document } = await res.json() as { document: ApiDocument };
   return loadBookContent(toBook(document));
+}
+
+/**
+ * State of the whole-book audio in the default voice (R-036): `ready` and `catalog` read with Reed's
+ * voice; `queued` (being generated) and `unavailable` (plan without book audio) read with the browser voice.
+ */
+export type BookAudioStatus = 'ready' | 'catalog' | 'queued' | 'unavailable';
+
+export async function getBookAudioStatus(documentId: string): Promise<BookAudioStatus> {
+  const { status } = await (await apiFetch(`/api/documents/${documentId}/audio`)).json() as { status: BookAudioStatus };
+  return status;
 }
 
 /** Saves where the reader is: `position` is the paragraph index across the whole book. */

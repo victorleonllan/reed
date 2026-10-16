@@ -5,7 +5,8 @@ import { useReed } from '../../context/ReedContext';
 import { useAccount } from '../../context/AccountContext';
 import { ReadingPage } from './ReadingParagraph';
 import { formatListenTime, ListenBar, useParagraphVoice } from './ListenBar';
-import { isBackendSession } from '../../services/api';
+import { BookAudioStatus, getBookAudioStatus, isBackendSession } from '../../services/api';
+import { openPlanChooser } from '../../services/billing';
 import { ListenSession, paragraphMinutes, publishListenSession, SessionPlanner, StreamItem, voiceName } from './SessionPlanner';
 import { READING_THEMES, ReadingSettings, readingTextStyle, useIdleChrome } from './ReadingSettings';
 import { ChapterDrawer, ReadingProgressRail } from './ReadingProgressRail';
@@ -137,6 +138,22 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
   // Voz de ElevenLabs (con sesión) o del navegador: ver useParagraphVoice.
   const voice = useParagraphVoice();
+  // Own books read with the browser voice until Reed's is generated (queued) or when the plan has none (unavailable).
+  const [audioStatus, setAudioStatus] = useState<BookAudioStatus | null>(null);
+  const browserVoiceOnly = audioStatus === 'queued' || audioStatus === 'unavailable';
+  // Read through a ref: a session chains speakAt closures from the render it started in.
+  const browserVoiceOnlyRef = useRef(browserVoiceOnly);
+  browserVoiceOnlyRef.current = browserVoiceOnly;
+
+  useEffect(() => {
+    setAudioStatus(null);
+    if (!isBackendSession() || !book.documentId) return;
+    let cancelled = false;
+    getBookAudioStatus(book.documentId)
+      .then((status) => { if (!cancelled) setAudioStatus(status); })
+      .catch(() => {}); // Unknown status: the reader tries Reed's voice and falls back as before.
+    return () => { cancelled = true; };
+  }, [book.id, book.documentId]);
   const stopSpeech = voice.stop;
   onProgressRef.current = onProgress;
   addSecondsRef.current = addReadingSeconds;
@@ -319,6 +336,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       voice: current.voice,
       rate: rateRef.current,
       following: flat < current.end ? streamRef.current[flat + 1]?.paragraph : undefined,
+      browserOnly: browserVoiceOnlyRef.current,
       onEnd: () => speakAt(flat + 1),
       onError: () => setIsPlaying(false),
     });
@@ -526,7 +544,19 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           onTogglePlay={handleTogglePlay}
           chapterTitle={page.chapterTitle}
           currentTimeFormatted={sessionTime}
-          voiceName={session && isBackendSession() ? voiceName(session.voice) : undefined}
+          voiceName={session && isBackendSession() && !browserVoiceOnly ? voiceName(session.voice) : undefined}
+          voiceNotice={
+            audioStatus === 'queued' ? (
+              'Estoy preparando mi voz para tu libro. Mientras tanto te leo con la voz de tu navegador.'
+            ) : audioStatus === 'unavailable' ? (
+              <>
+                <button type="button" onClick={openPlanChooser} className="focus-ring underline underline-offset-2 text-ink hover:text-ambar-ink">
+                  Con Reed Pro
+                </button>{' '}
+                te leo tus libros con mi voz. Por ahora te leo con la voz de tu navegador.
+              </>
+            ) : undefined
+          }
           sessionDone={sessionDone ? {
             minutes: sessionDone.minutes,
             onAnother: nextSession !== null ? () => openPlanner(nextSession) : undefined,

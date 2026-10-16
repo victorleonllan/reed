@@ -4,7 +4,7 @@ import { Button } from '../ui/Button';
 import { X, Upload, AlertCircle, FileText } from 'lucide-react';
 import { extractPdfChapters, isPdfFile, withTimeout } from '../../lib/pdf';
 import { buildUploadedBook, chaptersFromPlainText } from '../../lib/reading';
-import { ApiError, isBackendSession, uploadBook } from '../../services/api';
+import { ApiError, BookSlotsFullError, isBackendSession, uploadBook } from '../../services/api';
 
 // Same limits as the backend (README.md → API: POST /api/documents).
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
@@ -34,6 +34,8 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
   const [author, setAuthor] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Plan's book slots are full: the message stays in the modal with a way back to the library.
+  const [slotsFull, setSlotsFull] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [isDragging, setIsDragging] = useState(false);
 
@@ -58,6 +60,7 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
       return;
     }
     setError(null);
+    setSlotsFull(false);
     setFile(selected);
     if (!title) {
       setTitle(selected.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
@@ -96,6 +99,8 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
     setFile(null);
     setTitle('');
     setAuthor('');
+    setError(null);
+    setSlotsFull(false);
     onClose();
   };
 
@@ -111,6 +116,7 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
     }
 
     setError(null);
+    setSlotsFull(false);
     setPhase('uploading');
 
     if (backend) {
@@ -120,6 +126,12 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
         onBookUploaded(book);
         resetAndClose();
       } catch (caught) {
+        if (caught instanceof BookSlotsFullError) {
+          setError(caught.message);
+          setSlotsFull(true);
+          setPhase('idle');
+          return;
+        }
         const status = caught instanceof ApiError ? caught.status : 0;
         setError(
           status === 413 ? TOO_BIG_MESSAGE
@@ -261,6 +273,12 @@ export const UploadBookModal: React.FC<UploadBookModalProps> = ({
               <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
               <span>{error}</span>
             </p>
+          )}
+
+          {slotsFull && (
+            <Button type="button" variant="secondary" className="w-full" onClick={resetAndClose}>
+              Ver mis libros
+            </Button>
           )}
 
           <label className="block">

@@ -17,6 +17,8 @@ interface SpeakOptions {
   rate: number;
   /** Next paragraph, pre-loaded while this one plays. Only when the caller passes it; nothing else is pre-loaded. */
   following?: Paragraph;
+  /** Read with the browser voice without asking /api/tts (own book whose audio is queued or not in the plan). */
+  browserOnly?: boolean;
   onEnd: () => void;
   onError: () => void;
 }
@@ -24,7 +26,7 @@ interface SpeakOptions {
 /**
  * The voice that reads one paragraph at a time. ElevenLabs when signed in (one audio per paragraph,
  * cached in the browser by voice + text; the next one pre-loaded only if the caller asks); if the
- * daily limit runs out or playback fails, the browser's voice.
+ * limit runs out, the paragraph has no audio yet (not a failure) or playback fails, the browser's voice.
  * Each new `speak` or `stop` invalidates the previous one, so stale callbacks never fire.
  */
 export function useParagraphVoice() {
@@ -61,14 +63,14 @@ export function useParagraphVoice() {
     };
   }, [stop]);
 
-  const speak = async (paragraph: Paragraph, { voice, rate, following, onEnd, onError }: SpeakOptions) => {
+  const speak = async (paragraph: Paragraph, { voice, rate, following, browserOnly, onEnd, onError }: SpeakOptions) => {
     stop();
     const run = runRef.current;
     const ended = () => {
       if (run === runRef.current) onEnd();
     };
 
-    if (isBackendSession() && !useBrowserVoiceRef.current) {
+    if (isBackendSession() && !browserOnly && !useBrowserVoiceRef.current) {
       try {
         const url = await audioFor(paragraph, voice);
         if (run !== runRef.current) return;
@@ -80,6 +82,7 @@ export function useParagraphVoice() {
         if (following) audioFor(following, voice).catch(() => {});
         return;
       } catch {
+        // AudioNotGeneratedError lands here too: the browser voice takes over quietly, no error shown.
         if (run !== runRef.current) return;
         useBrowserVoiceRef.current = true;
       }
@@ -117,6 +120,8 @@ interface ListenBarProps {
   currentTimeFormatted: string;
   /** Name of the voice reading the session; omitted when the browser voice reads. */
   voiceName?: string;
+  /** One line above the controls about which voice reads this book (e.g. Reed's is still being prepared). */
+  voiceNotice?: React.ReactNode;
   /** The session reached its last paragraph: shown instead of the playing state. */
   sessionDone?: { minutes: number; onAnother?: () => void };
   playbackRate: number;
@@ -150,6 +155,7 @@ export const ListenBar: React.FC<ListenBarProps> = ({
   chapterTitle,
   currentTimeFormatted,
   voiceName,
+  voiceNotice,
   sessionDone,
   playbackRate,
   onChangePlaybackRate,
@@ -161,6 +167,11 @@ export const ListenBar: React.FC<ListenBarProps> = ({
   onClose,
 }) => (
   <div className="fixed bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-2xl z-40 animate-slideUp">
+    {voiceNotice && (
+      <p className="mb-2 px-3 py-2 rounded-md bg-paper-raised/95 backdrop-blur-md shadow-1 text-xs text-ink-muted" aria-live="polite">
+        {voiceNotice}
+      </p>
+    )}
     <div className="surface-raised shadow-3 bg-paper-raised/95 backdrop-blur-md p-2 sm:p-2.5 flex items-center gap-2 sm:gap-3">
       <button
         type="button"

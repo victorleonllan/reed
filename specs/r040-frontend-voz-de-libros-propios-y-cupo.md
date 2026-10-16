@@ -1,6 +1,6 @@
 # Spec R-040 — El lector avisa el estado de la voz de tus libros, y subir respeta el cupo
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` verdes; en ejecución, pendiente V15 y V16.
 > Capa: FRONTEND. `frontend/src/services/api.ts`, `frontend/src/components/reader/ListenBar.tsx`,
 > `frontend/src/components/reader/ReaderView.tsx`, `frontend/src/components/library/UploadBookModal.tsx`.
 > Depende de: R-035, R-036, R-038.
