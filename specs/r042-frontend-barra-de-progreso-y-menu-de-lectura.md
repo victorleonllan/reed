@@ -1,6 +1,6 @@
 # Spec R-042 — La barra de progreso sigue al encabezado y el menú «Aa» toma el tema de lectura
 
-> Estado: pendiente.
+> Estado: aplicado (16-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend`, `npm run lint` y el build del frontend en verde; el menú ya no usa `Surface` ni tokens de la app. En el celular queda para V19.
 > Capa: FRONTEND. `frontend/src/components/ui/Header.tsx`,
 > `frontend/src/components/reader/ReadingProgressRail.tsx`,
 > `frontend/src/components/reader/ReadingSettings.tsx`.

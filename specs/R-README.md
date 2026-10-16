@@ -91,7 +91,7 @@ referencia, nunca se modifica).
 | R-039 | FRONTEND | Precios y planes en la landing y en la app | aplicado (15-oct-2026) |
 | R-040 | FRONTEND | El lector avisa el estado de la voz de tus libros; subir respeta el cupo | aplicado (15-oct-2026) |
 | R-041 | FRONTEND | Reed se instala en el celular como app (PWA) | aplicado (15-oct-2026) |
-| R-042 | FRONTEND | La barra de progreso sigue al encabezado y el menú «Aa» toma el tema de lectura | pendiente |
+| R-042 | FRONTEND | La barra de progreso sigue al encabezado y el menú «Aa» toma el tema de lectura | aplicado (16-oct-2026) |
 
 ## Cadena de ejecución (herdr)
 

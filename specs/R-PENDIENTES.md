@@ -42,6 +42,8 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **V18** (R-041) — En el celular, `https://reed-alpha.vercel.app/app`: Android ofrece «Instalar
   app», iPhone (Safari → Compartir) «Agregar a pantalla de inicio»; Reed abre sin barra del
   navegador, con su ícono, y el acceso con Clerk funciona dentro de la app instalada.
+- **V19** (R-042) — En el lector, en el celular: al bajar no queda la línea bajo el encabezado, y el
+  menú «Aa» se lee en claro, sepia y oscuro, con la app en modo claro y en modo oscuro.
 
 ## Decisiones abiertas de Victor
 

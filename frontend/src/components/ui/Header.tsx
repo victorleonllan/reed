@@ -24,7 +24,8 @@ const navItems = [
 const SCROLL_THRESHOLD = 8;
 
 // In the reader the header slides away while scrolling down and comes back on scroll up.
-function useHideOnScroll(enabled: boolean) {
+// Exported so the mobile progress bar can follow it (R-042).
+export function useHideOnScroll(enabled: boolean) {
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
 

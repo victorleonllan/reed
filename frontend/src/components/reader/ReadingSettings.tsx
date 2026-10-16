@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Minus, Plus } from 'lucide-react';
 import { ReadingPrefs } from '../../types';
 import { IconButton } from '../ui/IconButton';
-import { Surface } from '../ui/Surface';
 
 export interface ReadingTheme {
   bg: string;
@@ -64,6 +63,11 @@ export const ReadingSettings: React.FC<ReadingSettingsProps> = ({ prefs, onChang
   const rootRef = useRef<HTMLDivElement | null>(null);
   const reduceMotion = useReducedMotion();
   const patch = (partial: Partial<ReadingPrefs>) => onChange({ ...prefs, ...partial });
+  // The panel paints itself with the reading theme, never with the app's light/dark tokens: the two
+  // are independent, and mixing them left text without contrast (R-042).
+  const t = READING_THEMES[prefs.theme];
+  const line = `${t.muted}66`;
+  const stepperStyle: React.CSSProperties = { color: t.fg, borderColor: line, background: 'transparent' };
 
   useEffect(() => {
     if (!open) return;
@@ -105,13 +109,17 @@ export const ReadingSettings: React.FC<ReadingSettingsProps> = ({ prefs, onChang
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className="absolute right-0 top-full mt-2 z-50 w-[min(20rem,calc(100vw-2rem))] origin-top-right"
           >
-            <Surface elevation={3} padding="sm" className="text-ink text-sm space-y-4">
-              <SettingRow label="Tamaño">
+            <div
+              className="rounded-lg border shadow-3 p-3 text-sm space-y-4 transition-colors duration-states"
+              style={{ background: t.page, color: t.fg, borderColor: line }}
+            >
+              <SettingRow label="Tamaño" color={t.muted}>
                 <IconButton
                   aria-label="Letra más pequeña"
                   variant="outline"
                   size="sm"
                   disabled={prefs.fontScale === 'sm'}
+                  style={stepperStyle}
                   onClick={() => patch({ fontScale: prefs.fontScale === 'lg' ? 'md' : 'sm' })}
                 >
                   <Minus size={14} />
@@ -122,21 +130,22 @@ export const ReadingSettings: React.FC<ReadingSettingsProps> = ({ prefs, onChang
                   variant="outline"
                   size="sm"
                   disabled={prefs.fontScale === 'lg'}
+                  style={stepperStyle}
                   onClick={() => patch({ fontScale: prefs.fontScale === 'sm' ? 'md' : 'lg' })}
                 >
                   <Plus size={14} />
                 </IconButton>
               </SettingRow>
-              <SettingRow label="Fuente">
-                <Choice active={prefs.font === 'serif'} onClick={() => patch({ font: 'serif' })} className="font-serif">Serif</Choice>
-                <Choice active={prefs.font === 'sans'} onClick={() => patch({ font: 'sans' })}>Sans</Choice>
+              <SettingRow label="Fuente" color={t.muted}>
+                <Choice theme={t} active={prefs.font === 'serif'} onClick={() => patch({ font: 'serif' })} className="font-serif">Serif</Choice>
+                <Choice theme={t} active={prefs.font === 'sans'} onClick={() => patch({ font: 'sans' })}>Sans</Choice>
               </SettingRow>
-              <SettingRow label="Interlineado">
-                <Choice active={prefs.leading === 'compact'} onClick={() => patch({ leading: 'compact' })}>Junto</Choice>
-                <Choice active={prefs.leading === 'normal'} onClick={() => patch({ leading: 'normal' })}>Normal</Choice>
-                <Choice active={prefs.leading === 'wide'} onClick={() => patch({ leading: 'wide' })}>Amplio</Choice>
+              <SettingRow label="Interlineado" color={t.muted}>
+                <Choice theme={t} active={prefs.leading === 'compact'} onClick={() => patch({ leading: 'compact' })}>Junto</Choice>
+                <Choice theme={t} active={prefs.leading === 'normal'} onClick={() => patch({ leading: 'normal' })}>Normal</Choice>
+                <Choice theme={t} active={prefs.leading === 'wide'} onClick={() => patch({ leading: 'wide' })}>Amplio</Choice>
               </SettingRow>
-              <SettingRow label="Tema">
+              <SettingRow label="Tema" color={t.muted}>
                 {(['light', 'sepia', 'dark'] as const).map((key) => (
                   <button
                     key={key}
@@ -144,21 +153,25 @@ export const ReadingSettings: React.FC<ReadingSettingsProps> = ({ prefs, onChang
                     onClick={() => patch({ theme: key })}
                     aria-pressed={prefs.theme === key}
                     className={`focus-ring h-8 px-3 rounded-sm border text-xs font-semibold transition-colors duration-states ${
-                      prefs.theme === key ? 'border-reed ring-1 ring-reed' : 'border-line'
+                      prefs.theme === key ? 'border-reed ring-1 ring-reed' : ''
                     }`}
-                    style={{ background: READING_THEMES[key].bg, color: READING_THEMES[key].fg }}
+                    style={{
+                      background: READING_THEMES[key].bg,
+                      color: READING_THEMES[key].fg,
+                      ...(prefs.theme === key ? {} : { borderColor: line }),
+                    }}
                   >
                     {{ light: 'Claro', sepia: 'Sepia', dark: 'Oscuro' }[key]}
                   </button>
                 ))}
               </SettingRow>
               <p
-                className="rounded-sm px-3 py-2 border border-line"
-                style={{ ...readingTextStyle(prefs), background: READING_THEMES[prefs.theme].page, fontSize: Math.min(FONT_SIZE[prefs.fontScale], 18) }}
+                className="rounded-sm px-3 py-2 border"
+                style={{ ...readingTextStyle(prefs), background: t.bg, borderColor: line, fontSize: Math.min(FONT_SIZE[prefs.fontScale], 18) }}
               >
                 Así se verá la página.
               </p>
-            </Surface>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -166,26 +179,32 @@ export const ReadingSettings: React.FC<ReadingSettingsProps> = ({ prefs, onChang
   );
 };
 
-const SettingRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+const SettingRow: React.FC<{ label: string; color: string; children: React.ReactNode }> = ({ label, color, children }) => (
   <div className="flex flex-wrap items-center gap-2">
-    <span className="w-24 text-xs uppercase tracking-wider text-ink-muted">{label}</span>
+    <span className="w-24 text-xs uppercase tracking-wider" style={{ color }}>{label}</span>
     {children}
   </div>
 );
 
-const Choice: React.FC<{ active: boolean; onClick: () => void; className?: string; children: React.ReactNode }> = ({
-  active,
-  onClick,
-  className = '',
-  children,
-}) => (
+const Choice: React.FC<{
+  theme: ReadingTheme;
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ theme, active, onClick, className = '', children }) => (
   <button
     type="button"
     onClick={onClick}
     aria-pressed={active}
-    className={`focus-ring h-8 px-3 rounded-sm border text-xs transition-colors duration-states ${
-      active ? 'border-reed bg-reed-soft text-ink font-bold' : 'border-line text-ink-muted hover:bg-paper-sunk'
+    className={`focus-ring h-8 px-3 rounded-sm border text-xs transition-colors duration-states hover:opacity-80 ${
+      active ? 'border-reed font-bold' : ''
     } ${className}`}
+    style={
+      active
+        ? { color: theme.fg, background: `${theme.fg}14` }
+        : { color: theme.muted, borderColor: `${theme.muted}66`, background: 'transparent' }
+    }
   >
     {children}
   </button>

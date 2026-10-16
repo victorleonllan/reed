@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { List } from 'lucide-react';
+import { useHideOnScroll } from '../ui/Header';
 
 interface RailChapter {
   chapterNumber: number;
@@ -32,12 +33,17 @@ export const ReadingProgressRail: React.FC<ReadingProgressRailProps> = ({
 }) => {
   const percent = Math.max(0, Math.min(100, progress));
   const at = (index: number) => (totalPages > 0 ? (index / totalPages) * 100 : 0);
+  // Same hide-on-scroll as the header: when it slides away, the bar moves up with it instead of
+  // floating 64px down over the text.
+  const headerHidden = useHideOnScroll(true);
 
   return (
     <>
-      {/* Mobile: horizontal, 2px, under the sticky header */}
+      {/* Mobile: horizontal, 2px, under the sticky header (or at the top edge while it is hidden) */}
       <div
-        className="lg:hidden fixed top-16 inset-x-0 z-20 h-[2px]"
+        className={`lg:hidden fixed top-16 inset-x-0 z-20 h-[2px] transition-transform duration-states ease-out motion-reduce:transition-none ${
+          headerHidden ? '-translate-y-16' : 'translate-y-0'
+        }`}
         style={{ background: `${trackColor}33` }}
         role="progressbar"
         aria-label="Progreso del libro"
