@@ -5,7 +5,9 @@ import { contentToText, countParagraphs, extractBookContent, SUPPORTED_EXTENSION
 import { documentSummaryColumns } from "@/lib/documents";
 import { createDocumentAgent, deleteAgent, deleteKnowledgeDoc, uploadKnowledgeText } from "@/lib/elevenlabs";
 import { handleRouteError, jsonError } from "@/lib/http";
-import { consumeUsage } from "@/lib/usage";
+import { config } from "@/config";
+import { activePlan, getPlan } from "@/lib/plan";
+import { BookSlotsFullError, consumeUsage, countSavedBooks } from "@/lib/usage";
 
 const { documents, readingProgress } = schema;
 
@@ -33,6 +35,7 @@ export async function GET() {
 }
 
 // POST multipart/form-data { file, title?, author? } -> 201 { document }
+// 409 { error, code: "book_slots_full", limit } when the user already keeps as many books as their plan allows.
 // Extracts the book's chapters/paragraphs, adds the text to the ElevenLabs knowledge base, and
 // creates the document's own agent. Supported: .pdf .epub .txt .md .html
 export async function POST(request: Request) {
@@ -59,6 +62,14 @@ export async function POST(request: Request) {
   let agentId: string | undefined;
   try {
     const userId = await getUserId();
+    // Own books are capped per plan (R-035): a full shelf answers 409, not 429, so the frontend's
+    // limit modal stays closed and the message shows next to the upload button.
+    const plan = activePlan(await getPlan(userId));
+    const bookLimit = config.plans[plan].books;
+    if ((await countSavedBooks(userId)) >= bookLimit) {
+      const { message } = new BookSlotsFullError(bookLimit, plan);
+      return Response.json({ error: message, code: "book_slots_full", limit: bookLimit }, { status: 409 });
+    }
     // Parse before anything is created, so unreadable files cost nothing.
     let content;
     try {

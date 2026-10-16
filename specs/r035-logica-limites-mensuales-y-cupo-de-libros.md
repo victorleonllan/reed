@@ -1,6 +1,6 @@
 # Spec R-035 — Límites por mes y cupo de libros guardados
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `tsc --noEmit` (raíz y frontend) y `npm run lint` en verde; `WINDOW_MS` = 30 días y sin `LIMIT_*_PER_USER` en `usage.ts`. El 409 `book_slots_full` en ejecución queda para la verificación de la mañana.
 > Capa: LÓGICA. `src/lib/usage.ts`, `src/app/api/documents/route.ts` (solo el POST),
 > `src/app/api/usage/route.ts`.
 > Depende de: R-034.
