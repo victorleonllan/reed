@@ -86,7 +86,7 @@ referencia, nunca se modifica).
 | R-034 | LÓGICA | Tres planes de pago en dólares: Básico USD 1, Pro USD 10, Biblioteca USD 25 | aplicado (15-oct-2026) |
 | R-035 | LÓGICA | Límites por mes y cupo de libros guardados (borra uno para subir otro) | aplicado (15-oct-2026) |
 | R-036 | LÓGICA | Cola de audio: la máquina local genera los libros de los usuarios con plan de voz | aplicado (15-oct-2026) |
-| R-037 | LÓGICA | La máquina de audio atiende la cola, cuida el tope del bucket y limpia lo huérfano | diseñado |
+| R-037 | LÓGICA | La máquina de audio atiende la cola, cuida el tope del bucket y limpia lo huérfano | aplicado (15-oct-2026) |
 | R-038 | LÓGICA | `/api/tts` deja de usar ElevenLabs salvo `TTS_FALLBACK=elevenlabs` | aplicado |
 | R-039 | FRONTEND | Precios y planes en la landing y en la app | aplicado (15-oct-2026) |
 | R-040 | FRONTEND | El lector avisa el estado de la voz de tus libros; subir respeta el cupo | diseñado |

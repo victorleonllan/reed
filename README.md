@@ -148,6 +148,23 @@ VoiceStudio de otra máquina (por ejemplo, por Tailscale).
    termina con código 1 cuando hubo fallidos). **Para regenerar todo** (otro motor, perfiles
    nuevos), sube `localTts.libraryVersion` en `src/config.ts` (`v1` → `v2`): las rutas
    cambian y los archivos viejos quedan donde estaban, sin borrarse.
+6. **Libros de los usuarios (R-036, R-037).** La app publica una cola con los libros de usuarios
+   con plan de voz que aún no tienen audio. Agrega al `.env.local` de la máquina de audio
+   `REED_APP_URL` (la URL de la app, por ejemplo `https://reed.app`) y
+   `REED_AUDIO_MACHINE_TOKEN` (el mismo valor que en Vercel). El comando de servicio es
+   `npm run audio:generate -- --queue --watch`: consulta la cola cada 10 minutos (o
+   `--watch 5`), genera cada libro en la voz que indica la cola e imprime una línea por libro
+   (`título — párrafos — minutos`) o «cola vacía» con la hora. Cuando un libro queda completo,
+   sube su manifiesto (`audio/<versión>/<voz>/books/<id>.json`); si falló un párrafo no lo
+   sube, y el libro vuelve en la próxima pasada. `--catalog` y `--book` también suben el
+   manifiesto de cada libro completo.
+7. **Tope de espacio.** Antes de cada libro el script suma el tamaño del bucket. Si pasa
+   `R2_MAX_GB` (por defecto `9`, debajo de los 10 GB gratis de R2), no genera más y sale con
+   código 2; con `--watch` espera a la próxima vuelta.
+8. **Limpieza, una vez al mes:** `npm run audio:generate -- --prune` cuenta el audio que ningún
+   libro listo usa (libros borrados) y cuántos MB ocupa, sin borrar nada.
+   `npm run audio:generate -- --prune --yes` lo borra. Un párrafo que comparten dos libros se
+   conserva mientras alguno exista.
 
 VoiceStudio es AGPL-3.0; usarlo sin modificar para generar archivos no obliga a publicar el
 código de Reed.

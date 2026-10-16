@@ -1,6 +1,6 @@
 # Spec R-037 — La máquina de audio atiende la cola, cuida el bucket y limpia lo huérfano
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; `--queue` sin `REED_APP_URL`/`REED_AUDIO_MACHINE_TOKEN` sale con 1 nombrándolas; `--catalog --dry-run` pasa el chequeo de variables solo con `DATABASE_URL`. La cola, el tope y `--prune` contra R2 real quedan por probar en ejecución.
 > Capa: LÓGICA. `scripts/generate-audiobook.mts`, `README.md` (sección «Máquina de audio»).
 > Depende de: R-036.
 
