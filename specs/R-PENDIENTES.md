@@ -31,12 +31,28 @@ Lo que la cadena de noche no puede cerrar sola. Las `V#` se hacen con la app cor
 - **V13** (R-030) — en el lector, un párrafo generado responde `X-Reed-Audio: library` y el
   uso de ElevenLabs no sube.
 
+- **V14** (R-034, R-039) — Stripe en modo prueba: comprar Básico, Pro y Biblioteca; el plan
+  correcto aparece en el perfil; cambiar de plan desde el portal actualiza Clerk.
+- **V15** (R-035, R-040) — con Pro y 3 libros guardados, subir un cuarto muestra «Borra uno
+  para subir otro»; borrar uno deja subir.
+- **V16** (R-036, R-037, R-040) — subir un libro con Pro: el lector dice «Estoy preparando mi
+  voz»; `--queue` lo genera, sube el manifiesto y al recargar el lector usa la voz de Reed.
+- **V17** (R-037) — `--prune` sin `--yes` después de borrar un libro: lista sus claves y no
+  borra nada.
+
 ## Decisiones abiertas de Victor
 
-- **Precio y límites de Reed Pro** (R-001): quedó MXN 99/mes y 990/año, con 20 000 caracteres
-  de voz al día. Revisar contra el costo real de ElevenLabs: en el plan Creator, ~131 000
-  caracteres al mes cuestan USD 22, así que un Pro que use su tope todos los días cuesta más de
-  lo que paga. Ajustar en `src/config.ts`.
+- **Precio y límites** (R-001): cerrada por R-034 (15-oct-2026). Supuestos de diseño a
+  confirmar: Biblioteca USD 25 con 20 libros, años a 10 meses, Básico con 1 libro propio.
+- **Stripe, a mano antes de V14** (R-034): crear en dólares los productos Básico, Pro y
+  Biblioteca con precio mensual y anual; poner las seis `STRIPE_PRICE_*` en Vercel; en el portal,
+  permitir cambiar entre los tres productos.
+- **Máquina de audio** (R-036, R-037): `REED_AUDIO_MACHINE_TOKEN` (el mismo en Vercel y en el
+  PC) y `REED_APP_URL` en el PC.
+- **`TTS_FALLBACK`** (R-038): vacío deja a ElevenLabs fuera de la voz. Poner `elevenlabs` en
+  Vercel solo si se quiere voz de ElevenLabs mientras el catálogo no está generado.
+- **Qué escucha el usuario mientras se genera su libro** (R-040): el diseño usa la voz del
+  navegador con aviso. Otra opción va en un spec nuevo.
 - **Correo de soporte y remitentes** (`src/config.ts`): `hola@reed.app` es un placeholder.
 - **Términos y privacidad** (R-017): son un borrador; revisión legal antes de cobrar en serio.
 - **Dominio** del fork y `NEXT_PUBLIC_SITE_URL`.

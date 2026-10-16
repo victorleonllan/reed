@@ -83,6 +83,13 @@ referencia, nunca se modifica).
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
 | R-032 | LÓGICA | El audio pregenerado se sube a Cloudflare R2: Vercel Blob Hobby no alcanza (supera el almacenamiento de R-029/R-031) | aplicado (15-oct-2026) |
 | R-033 | LÓGICA | Reed Pro deja de prometer conversación por voz (config, mensaje de límite, correo) | aplicado (15-oct-2026) |
+| R-034 | LÓGICA | Tres planes de pago en dólares: Básico USD 1, Pro USD 10, Biblioteca USD 25 | diseñado |
+| R-035 | LÓGICA | Límites por mes y cupo de libros guardados (borra uno para subir otro) | diseñado |
+| R-036 | LÓGICA | Cola de audio: la máquina local genera los libros de los usuarios con plan de voz | diseñado |
+| R-037 | LÓGICA | La máquina de audio atiende la cola, cuida el tope del bucket y limpia lo huérfano | diseñado |
+| R-038 | LÓGICA | `/api/tts` deja de usar ElevenLabs salvo `TTS_FALLBACK=elevenlabs` | diseñado |
+| R-039 | FRONTEND | Precios y planes en la landing y en la app | diseñado |
+| R-040 | FRONTEND | El lector avisa el estado de la voz de tus libros; subir respeta el cupo | diseñado |
 
 ## Cadena de ejecución (herdr)
 
@@ -158,5 +165,25 @@ spec-fleet-cadena reed:R032 reed:R033
 
 R-033 cierra la addenda de R-026. No comparte archivos con R-032; va después solo porque R-032
 instala dependencias.
+
+### R-034 → R-040 (15-oct-2026): voz 100 % local y planes en dólares
+
+Victor decidió sacar a ElevenLabs de la voz (queda solo para texto) y cobrar tres planes:
+Básico USD 1, Pro USD 10 con 3 libros propios con voz, Biblioteca USD 25 con 20. El porqué y los
+números están en el vault («Reed — plan de orquestación del audio pregenerado»).
+
+```
+1  R-034                    (solo: cambia los tipos de plan que usan todos los demás)
+2  R-035 + R-036
+3  R-037 + R-038 + R-039    (R-038 va después de R-036 porque ambos tocan .env.example)
+4  R-040                    (usa R-035, R-036 y R-038)
+```
+
+```
+spec-fleet-cadena reed:R034 reed:R035+reed:R036 reed:R037+reed:R038+reed:R039 reed:R040
+```
+
+Sin specs DATOS: «libro terminado» es un manifiesto en R2 (R-036) y el cupo se cuenta en
+`documents` (R-035).
 
 Pendientes y verificaciones: [R-PENDIENTES.md](R-PENDIENTES.md).
