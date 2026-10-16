@@ -1,6 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 
-export type PlanId = "free" | "pro";
+// "free" is an account without a paid plan; the other three are sold (R-034).
+export type PlanId = "free" | "basico" | "pro" | "biblioteca";
+export type PaidPlanId = Exclude<PlanId, "free">;
+const PLAN_IDS: readonly PlanId[] = ["free", "basico", "pro", "biblioteca"];
 export type PlanInfo = {
   plan: PlanId;
   status: "active" | "past_due" | "canceled" | "none";
@@ -28,7 +31,7 @@ function parse(raw: unknown): PlanInfo {
   if (!raw || typeof raw !== "object") return { ...FREE };
   const r = raw as Partial<PlanInfo>;
   return {
-    plan: r.plan === "pro" ? "pro" : "free",
+    plan: PLAN_IDS.includes(r.plan as PlanId) ? (r.plan as PlanId) : "free",
     status: r.status === "active" || r.status === "past_due" || r.status === "canceled" ? r.status : "none",
     renewsAt: r.renewsAt ?? null,
     stripeCustomerId: r.stripeCustomerId ?? null,
@@ -58,6 +61,12 @@ export async function setPlan(userId: string, patch: Partial<PlanInfo>): Promise
 }
 
 // past_due still counts: Stripe retries the charge for a few days and cutting access at once is hostile.
+/** The plan the user can use right now: the stored plan while the subscription is live, else "free". */
+export function activePlan(info: PlanInfo): PlanId {
+  return info.status === "active" || info.status === "past_due" ? info.plan : "free";
+}
+
+// Kept for compatibility: since R-034 it means "has any active paid plan" (basico, pro or biblioteca).
 export function isPro(info: PlanInfo): boolean {
-  return info.plan === "pro" && (info.status === "active" || info.status === "past_due");
+  return activePlan(info) !== "free";
 }

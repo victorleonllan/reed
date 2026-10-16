@@ -83,7 +83,7 @@ referencia, nunca se modifica).
 | R-031 | LÓGICA | Máquina de audio: `npm run audio:generate` con VoiceStudio | aplicado (15-oct-2026) |
 | R-032 | LÓGICA | El audio pregenerado se sube a Cloudflare R2: Vercel Blob Hobby no alcanza (supera el almacenamiento de R-029/R-031) | aplicado (15-oct-2026) |
 | R-033 | LÓGICA | Reed Pro deja de prometer conversación por voz (config, mensaje de límite, correo) | aplicado (15-oct-2026) |
-| R-034 | LÓGICA | Tres planes de pago en dólares: Básico USD 1, Pro USD 10, Biblioteca USD 25 | diseñado |
+| R-034 | LÓGICA | Tres planes de pago en dólares: Básico USD 1, Pro USD 10, Biblioteca USD 25 | aplicado (15-oct-2026) |
 | R-035 | LÓGICA | Límites por mes y cupo de libros guardados (borra uno para subir otro) | diseñado |
 | R-036 | LÓGICA | Cola de audio: la máquina local genera los libros de los usuarios con plan de voz | diseñado |
 | R-037 | LÓGICA | La máquina de audio atiende la cola, cuida el tope del bucket y limpia lo huérfano | diseñado |

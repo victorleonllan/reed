@@ -2,7 +2,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import Stripe from "stripe";
 import { config } from "@/config";
 import { proActivatedEmail } from "./emails";
-import type { PlanInfo } from "./plan";
+import type { PaidPlanId, PlanId, PlanInfo } from "./plan";
 import { sendEmail } from "./resend";
 
 /** STRIPE_SECRET_KEY (or a Pro price id) is missing: routes answer 503 instead of crashing. */
@@ -26,29 +26,33 @@ export function getStripe(): Stripe {
   return client;
 }
 
-/** Subscription Checkout for Reed Pro; returns the URL to send the browser to. */
+export const PAID_PLANS: readonly PaidPlanId[] = ["basico", "pro", "biblioteca"];
+
+/** Subscription Checkout for a paid plan; returns the URL to send the browser to. */
 export async function createCheckout({
   userId,
   email,
+  plan,
   interval,
   customerId,
 }: {
   userId: string;
   email?: string | null;
+  plan: PaidPlanId;
   interval: BillingInterval;
   customerId?: string | null;
 }): Promise<string> {
   const stripe = getStripe();
-  const { stripePriceMonthly, stripePriceYearly } = config.plans.pro;
+  const { name, stripePriceMonthly, stripePriceYearly } = config.plans[plan];
   const price = interval === "year" ? stripePriceYearly : stripePriceMonthly;
-  if (!price) throw new PaymentsNotConfiguredError(`Reed Pro ${interval}ly price id is not set`);
+  if (!price) throw new PaymentsNotConfiguredError(`${name} ${interval}ly price id is not set`);
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price, quantity: 1 }],
     client_reference_id: userId,
     // Every subscription event then carries the Clerk user, without a lookup table.
-    subscription_data: { metadata: { userId } },
+    subscription_data: { metadata: { userId, plan } },
     ...(customerId ? { customer: customerId } : email ? { customer_email: email } : {}),
     allow_promotion_codes: true,
     success_url: `${config.siteUrl}${config.appPath}?checkout=ok`,
@@ -56,6 +60,16 @@ export async function createCheckout({
   });
   if (!session.url) throw new Error(`Checkout session ${session.id} has no url`);
   return session.url;
+}
+
+/** The paid plan a Stripe price belongs to (any of the six in config.plans), or null. */
+export function planForPrice(priceId: string | null | undefined): PlanId | null {
+  if (!priceId) return null;
+  for (const plan of PAID_PLANS) {
+    const { stripePriceMonthly, stripePriceYearly } = config.plans[plan];
+    if (priceId === stripePriceMonthly || priceId === stripePriceYearly) return plan;
+  }
+  return null;
 }
 
 /** Customer Portal session (change card, cancel); returns its URL. */

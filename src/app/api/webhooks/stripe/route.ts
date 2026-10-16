@@ -1,13 +1,22 @@
 import type Stripe from "stripe";
 import { jsonError } from "@/lib/http";
-import { setPlan } from "@/lib/plan";
-import { getStripe, onProActivated, PaymentsNotConfiguredError, periodEnd, toPlanStatus } from "@/lib/stripe";
+import { setPlan, type PlanId } from "@/lib/plan";
+import { getStripe, onProActivated, PAID_PLANS, PaymentsNotConfiguredError, periodEnd, planForPrice, toPlanStatus } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
 const idOf = (value: string | { id: string } | null | undefined) => (typeof value === "string" ? value : value?.id ?? null);
 
-// Stripe webhook: keeps the Reed Pro plan in Clerk (src/lib/plan.ts) in sync with the subscription.
+// The paid plan of a subscription: from its price (it follows plan changes made in the portal),
+// else from the checkout metadata, else "pro" (subscriptions created before R-034 had no plan).
+function planOf(subscription: Stripe.Subscription): PlanId {
+  const fromPrice = planForPrice(subscription.items.data[0]?.price.id);
+  if (fromPrice) return fromPrice;
+  const fromMetadata = PAID_PLANS.find((id) => id === subscription.metadata.plan);
+  return fromMetadata ?? "pro";
+}
+
+// Stripe webhook: keeps the paid plan in Clerk (src/lib/plan.ts) in sync with the subscription.
 // It authenticates with the Stripe signature, not Clerk. Configure in Stripe → Developers → Webhooks,
 // URL <deploy>/api/webhooks/stripe, and put its signing secret in STRIPE_WEBHOOK_SECRET.
 // Idempotent: every write sets absolute values, so a redelivered event leaves the same state.
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
         }
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         await setPlan(userId, {
-          plan: "pro",
+          plan: planOf(subscription),
           status: "active",
           stripeCustomerId: idOf(session.customer),
           stripeSubscriptionId: subscriptionId,
@@ -60,9 +69,9 @@ export async function POST(request: Request) {
         const userId = subscription.metadata.userId;
         if (!userId) break; // not created by Reed's checkout
         const status = toPlanStatus(subscription.status);
-        // With cancel_at_period_end Stripe keeps it "active" until renewsAt, so the user stays Pro until then.
+        // With cancel_at_period_end Stripe keeps it "active" until renewsAt, so the user keeps the plan until then.
         await setPlan(userId, {
-          plan: status === "canceled" ? "free" : "pro",
+          plan: status === "canceled" ? "free" : planOf(subscription),
           status,
           stripeCustomerId: idOf(subscription.customer),
           stripeSubscriptionId: status === "canceled" ? null : subscription.id,

@@ -1,6 +1,6 @@
 # Spec R-034 — Tres planes de pago en dólares: Básico, Pro y Biblioteca
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` verdes; `grep '"MXN"' src/config.ts` vacío; el webhook ya no escribe `plan: "pro"` fijo.
 > Capa: LÓGICA. `src/config.ts` (solo `plans` y el comentario de límites), `src/lib/plan.ts`,
 > `src/lib/stripe.ts`, `src/app/api/stripe/create-checkout/route.ts`,
 > `src/app/api/webhooks/stripe/route.ts`, `.env.example` (bloque de Stripe).
