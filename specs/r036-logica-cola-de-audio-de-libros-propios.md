@@ -1,6 +1,6 @@
 # Spec R-036 — Cola de audio: la máquina local genera los libros de los usuarios
 
-> Estado: diseñado (15-oct-2026).
+> Estado: aplicado (15-oct-2026). Verificado: `npx tsc --noEmit`, `npx tsc --noEmit -p frontend` y `npm run lint` en verde; las rutas en ejecución quedan para V16.
 > Capa: LÓGICA. `src/lib/audio-library.ts`, `src/app/api/audio/queue/route.ts` (nuevo),
 > `src/app/api/documents/[id]/audio/route.ts` (nuevo), `.env.example` (bloque de la biblioteca).
 > Depende de: R-034.
